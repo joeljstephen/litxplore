@@ -34,24 +34,6 @@ class AtAGlanceAnalysis(BaseModel):
     conclusion: str                  # Main conclusions
 
 
-class FigureExplanation(BaseModel):
-    label: str                       # e.g., "Figure 2" or "Table 1"
-    caption: str
-    explanation: str
-    page: int
-
-
-class KeyInsightsAnalysis(BaseModel):
-    figures: List[FigureExplanation]
-    limitations: List[str]
-    future_work: List[str]
-
-
-class SuggestedQuestion(BaseModel):
-    question: str
-    category: Literal["methodology", "results", "limitations", "applications", "datasets", "reproducibility"]
-
-
 class InDepthAnalysis(BaseModel):
     """Comprehensive, detailed analysis of each paper section."""
     introduction: str               # In-depth explanation of introduction
@@ -67,9 +49,7 @@ class InDepthAnalysis(BaseModel):
 class PaperAnalysis(BaseModel):
     paper: PaperMetadata
     at_a_glance: AtAGlanceAnalysis
-    key_insights: Optional[KeyInsightsAnalysis] = None  # lazy-loaded on demand
     in_depth: Optional[InDepthAnalysis] = None          # lazy-loaded comprehensive analysis
-    suggested_questions: List[SuggestedQuestion]
     generated_at: datetime
     schema_version: str = "1.0.0"
     model_tag: str = "gemini-2.0-flash"                 # env-configurable

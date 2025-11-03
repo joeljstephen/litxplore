@@ -5,7 +5,6 @@ from pydantic import ValidationError
 
 from ..models.analysis import (
     AtAGlanceAnalysis,
-    SuggestedQuestion,
     InDepthAnalysis,
 )
 
@@ -57,20 +56,6 @@ def parse_at_a_glance_json(response_text: str) -> AtAGlanceAnalysis:
         logger.error(f"Failed to parse At-a-Glance JSON. Error: {str(e)}")
         logger.error(f"Response text (first 500 chars): {response_text[:500]}")
         raise
-
-
-def parse_suggested_questions_json(response_text: str) -> list[SuggestedQuestion]:
-    """Parse suggested questions JSON response."""
-    json_text = extract_json_from_response(response_text)
-    data = json.loads(json_text)
-    return [SuggestedQuestion(**q) for q in data]
-
-
-def parse_limitations_future_work_json(response_text: str) -> tuple[list[str], list[str]]:
-    """Parse limitations and future work JSON response."""
-    json_text = extract_json_from_response(response_text)
-    data = json.loads(json_text)
-    return data.get("limitations", []), data.get("future_work", [])
 
 
 def parse_in_depth_json(response_text: str) -> InDepthAnalysis:

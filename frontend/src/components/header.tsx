@@ -9,7 +9,7 @@ import { Search, BookOpen, Clock, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -45,7 +45,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
-            {isSignedIn &&
+            {isLoaded && isSignedIn &&
               navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -61,9 +61,10 @@ export function Header() {
                 </Link>
               ))}
 
-            {isSignedIn ? (
+            {!isLoaded ? (
+              <div className="h-9 w-9 ml-2 rounded-full bg-muted animate-pulse" />
+            ) : isSignedIn ? (
               <UserButton
-                afterSignOutUrl="/"
                 appearance={{
                   elements: {
                     userButtonAvatarBox: "h-9 w-9 ml-2",
@@ -124,13 +125,20 @@ export function Header() {
         )}
       >
         <div className="container mx-auto px-4 py-3">
-          {isSignedIn ? (
+          {!isLoaded ? (
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-accent border border-border">
+              <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+              <div className="flex flex-col space-y-2">
+                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ) : isSignedIn ? (
             <div className="flex flex-col space-y-4">
               {/* User Profile Section */}
               <div className="flex items-center justify-between p-3 rounded-lg bg-accent border border-border">
                 <div className="flex items-center space-x-3">
                   <UserButton
-                    afterSignOutUrl="/"
                     appearance={{
                       elements: {
                         userButtonAvatarBox: "h-10 w-10",

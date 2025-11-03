@@ -13,7 +13,7 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
   return (
     <div className="h-full flex flex-col @container">
       <Tabs defaultValue="introduction" className="flex-1 flex flex-col">
-        <TabsList className="!grid w-full grid-cols-2 @xs:grid-cols-2 @sm:grid-cols-2 @md:grid-cols-3 @lg:grid-cols-4 @xl:grid-cols-8 gap-1 !h-auto p-1">
+        <TabsList className="!grid w-full grid-cols-1 @xs:grid-cols-2 @sm:grid-cols-2 @md:grid-cols-3 @lg:grid-cols-4 @xl:grid-cols-8 gap-1 !h-auto p-1">
           <TabsTrigger
             value="introduction"
             className="text-xs px-3 py-2.5 whitespace-nowrap"
@@ -74,7 +74,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.introduction
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}
@@ -93,7 +95,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.related_work
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}
@@ -112,7 +116,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.problem_statement
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}
@@ -131,7 +137,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.methodology
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}
@@ -149,11 +157,15 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {analysis.results.split("\n\n").map((paragraph, idx) => (
-                      <p key={idx} className="mb-4 text-base leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
+                    {analysis.results
+                      .replace(/\\n\\n/g, "\n\n")
+                      .split("\n\n")
+                      .filter(p => p.trim())
+                      .map((paragraph, idx) => (
+                        <p key={idx} className="mb-4 text-base leading-relaxed">
+                          {paragraph}
+                        </p>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -166,11 +178,15 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {analysis.discussion.split("\n\n").map((paragraph, idx) => (
-                      <p key={idx} className="mb-4 text-base leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
+                    {analysis.discussion
+                      .replace(/\\n\\n/g, "\n\n")
+                      .split("\n\n")
+                      .filter(p => p.trim())
+                      .map((paragraph, idx) => (
+                        <p key={idx} className="mb-4 text-base leading-relaxed">
+                          {paragraph}
+                        </p>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -184,7 +200,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.limitations
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}
@@ -203,7 +221,9 @@ export function InDepthPanel({ analysis }: InDepthPanelProps) {
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {analysis.conclusion_future_work
+                      .replace(/\\n\\n/g, "\n\n")
                       .split("\n\n")
+                      .filter(p => p.trim())
                       .map((paragraph, idx) => (
                         <p key={idx} className="mb-4 text-base leading-relaxed">
                           {paragraph}

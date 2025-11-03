@@ -15,7 +15,8 @@ export default function SignInComponent() {
           card: "bg-white",
         },
       }}
-      redirectUrl={redirectUrl}
+      fallbackRedirectUrl={redirectUrl}
+      forceRedirectUrl={searchParams.get("force_redirect") || undefined}
     />
   );
 }

@@ -21,11 +21,10 @@ async def analyze_paper(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Analyze a paper and generate At-a-Glance summary + Suggested Questions.
+    Analyze a paper and generate At-a-Glance summary.
     
-    - Generates or refreshes the At-a-Glance + Suggested Questions immediately.
-    - Does NOT compute Key Insights unless asked (lazy).
-    - Returns PaperAnalysis (key_insights may be null).
+    - Generates or refreshes the At-a-Glance analysis immediately.
+    - Returns PaperAnalysis (in_depth may be null).
     
     Args:
         paper_id: The ID of the paper to analyze
@@ -33,7 +32,7 @@ async def analyze_paper(
         current_user: Authenticated user
     
     Returns:
-        PaperAnalysis with at_a_glance and suggested_questions populated
+        PaperAnalysis with at_a_glance populated
     """
     try:
         if not paper_id:
@@ -66,7 +65,7 @@ async def get_paper_analysis(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Retrieve the latest PaperAnalysis (including cached Key Insights if computed).
+    Retrieve the latest PaperAnalysis (including cached In-Depth if computed).
     
     Args:
         paper_id: The ID of the paper
@@ -101,55 +100,6 @@ async def get_paper_analysis(
         logger.exception(f"Failed to retrieve analysis for paper {paper_id}")
         raise_internal_error(
             message=f"Failed to retrieve analysis: {str(e)}",
-            error_code=ErrorCode.INTERNAL_ERROR
-        )
-
-
-@router.post("/{paper_id}/key-insights", response_model=PaperAnalysis, operation_id="computeKeyInsights")
-async def compute_key_insights(
-    paper_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Trigger Key Insights computation (figures/limitations/future work).
-    
-    - Detects figures and tables with captions
-    - Extracts limitations and future work from paper
-    - Returns PaperAnalysis with key_insights populated
-    
-    Args:
-        paper_id: The ID of the paper
-        current_user: Authenticated user
-    
-    Returns:
-        PaperAnalysis with key_insights populated
-    """
-    try:
-        if not paper_id:
-            raise_validation_error(
-                message="Paper ID is required",
-                error_code=ErrorCode.VALIDATION_ERROR
-            )
-        
-        analysis = await analysis_service.compute_key_insights(
-            paper_id=paper_id,
-            user_id=current_user.id
-        )
-        
-        if not analysis:
-            raise_not_found(
-                message="Could not compute key insights for this paper",
-                details={"paper_id": paper_id}
-            )
-        
-        return analysis
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Failed to compute key insights for paper {paper_id}")
-        raise_internal_error(
-            message=f"Failed to compute key insights: {str(e)}",
             error_code=ErrorCode.INTERNAL_ERROR
         )
 

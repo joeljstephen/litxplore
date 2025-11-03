@@ -51,14 +51,9 @@ LitXplore Paper Analyzer is a production-ready AI-powered platform for analyzing
   - Limitations (constraints, biases)
   - Conclusion & Future Work (contributions, impact)
 
-#### 3. Key Insights 🔍
-- **Speed**: 5-10 seconds, lazy-loaded
-- **Content**: Figures/tables (up to 5 with explanations), limitations, future work
-
-#### 4. Interactive Chat 💬
+#### 3. Interactive Chat 💬
 - Vector-based Q&A with FAISS search
 - Streaming responses (Vercel AI SDK)
-- Suggested questions for quick exploration
 - Debounced input (300ms) for cost optimization
 
 ### User Experience
@@ -114,7 +109,7 @@ FastAPI
 **Initial Analysis**:
 ```
 User → Frontend → API → Check Cache → Fetch PDF → Extract Text
-    → Generate At-a-Glance (LLM) → Generate Questions (LLM)
+    → Generate At-a-Glance (LLM)
     → Cache Result → Return PaperAnalysis
 ```
 
@@ -169,21 +164,16 @@ Visit `http://localhost:3000`
 ### Analysis Endpoints
 
 #### POST /api/v1/analysis/{paper_id}/analyze
-Generate At-a-Glance analysis + Suggested Questions
+Generate At-a-Glance analysis
 
 **Query Params**: `force_refresh` (boolean, default: false)  
 **Headers**: `Authorization: Bearer <token>`  
-**Response**: `PaperAnalysis` with `at_a_glance` and `suggested_questions`
+**Response**: `PaperAnalysis` with `at_a_glance`
 
 #### GET /api/v1/analysis/{paper_id}
 Retrieve cached analysis
 
 **Response**: `PaperAnalysis` or 404
-
-#### POST /api/v1/analysis/{paper_id}/key-insights
-Compute Key Insights (figures, limitations, future work)
-
-**Response**: `PaperAnalysis` with `key_insights` populated
 
 #### POST /api/v1/analysis/{paper_id}/in-depth
 Compute In-Depth Analysis
@@ -389,10 +379,7 @@ backend/app/
 │   └── analysis.py          # Pydantic models
 ├── prompts/analyzer/
 │   ├── at_a_glance.txt
-│   ├── in_depth.txt
-│   ├── suggested_questions.txt
-│   ├── limitations_future_work.txt
-│   └── figure_explanation.txt
+│   └── in_depth.txt
 └── core/
     ├── config.py            # Configuration
     └── auth.py              # Authentication
@@ -406,7 +393,6 @@ frontend/src/
 ├── components/analyzer/
 │   ├── at-a-glance-cards.tsx
 │   ├── in-depth-panel.tsx
-│   ├── key-insights-panel.tsx
 │   ├── chat-panel.tsx
 │   └── skeletons.tsx
 ├── hooks/
@@ -424,7 +410,6 @@ frontend/src/
 
 - **At-a-Glance**: 2-3 seconds (fast model)
 - **In-Depth**: 10-20 seconds (lazy-loaded)
-- **Key Insights**: 5-10 seconds (lazy-loaded)
 - **Chat**: Real-time streaming
 - **Cache Hit Rate**: ~70%
 - **API Response**: <500ms with cache

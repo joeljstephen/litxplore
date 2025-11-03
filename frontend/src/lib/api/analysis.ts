@@ -11,7 +11,7 @@ function getAuthHeaders(token?: string | null): HeadersInit {
 
 export const analysisApi = {
   /**
-   * Analyze a paper and generate At-a-Glance + Suggested Questions
+   * Analyze a paper and generate At-a-Glance analysis
    */
   async analyzePaper(
     paperId: string,
@@ -68,31 +68,6 @@ export const analysisApi = {
       console.error("Error retrieving analysis:", error);
       return null;
     }
-  },
-
-  /**
-   * Compute Key Insights (figures, limitations, future work) for a paper
-   */
-  async computeKeyInsights(
-    paperId: string,
-    token?: string | null
-  ): Promise<PaperAnalysis> {
-    const headers = getAuthHeaders(token);
-    const response = await fetch(
-      `${API_BASE_URL}/api/v1/analysis/${paperId}/key-insights`,
-      {
-        method: "POST",
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to compute key insights: ${response.status} ${response.statusText}`
-      );
-    }
-
-    return response.json();
   },
 
   /**

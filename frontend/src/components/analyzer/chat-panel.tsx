@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { SuggestedQuestion } from "@/lib/types/analysis";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ChatPanelProps {
   paperId: string;
-  suggestedQuestions: SuggestedQuestion[];
 }
 
 interface Message {
@@ -22,7 +20,7 @@ interface Message {
   content: string;
 }
 
-export function ChatPanel({ paperId, suggestedQuestions }: ChatPanelProps) {
+export function ChatPanel({ paperId }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { getToken } = useAuth();
   const { toast } = useToast();
@@ -135,34 +133,8 @@ export function ChatPanel({ paperId, suggestedQuestions }: ChatPanelProps) {
     sendMessage(input);
   };
 
-  const handleQuestionClick = (question: string) => {
-    sendMessage(question);
-  };
-
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Suggested Questions */}
-      {suggestedQuestions.length > 0 && messages.length === 0 && (
-        <div className="px-4 py-3 border-b bg-muted/30">
-          <p className="text-xs font-semibold text-muted-foreground mb-2">
-            Suggested Questions
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.slice(0, 3).map((q, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuestionClick(q.question)}
-                className="text-xs h-auto py-1 px-2"
-              >
-                {q.question}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Chat Messages */}
       <ScrollArea className="flex-1 px-4 py-4">
         <div className="space-y-4 pr-4">

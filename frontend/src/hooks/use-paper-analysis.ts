@@ -6,7 +6,6 @@ import { analysisApi } from "@/lib/api/analysis";
 export type AnalysisState = {
   analysis: PaperAnalysis | null;
   isLoading: boolean;
-  isLoadingKeyInsights: boolean;
   isLoadingInDepth: boolean;
   error: string | null;
 };
@@ -16,13 +15,12 @@ export function usePaperAnalysis(paperId: string) {
   const [state, setState] = useState<AnalysisState>({
     analysis: null,
     isLoading: false,
-    isLoadingKeyInsights: false,
     isLoadingInDepth: false,
     error: null,
   });
 
   /**
-   * Analyze paper (generates At-a-Glance + Suggested Questions)
+   * Analyze paper (generates At-a-Glance analysis)
    */
   const analyze = useCallback(
     async (forceRefresh: boolean = false) => {
@@ -49,43 +47,6 @@ export function usePaperAnalysis(paperId: string) {
     },
     [paperId, getToken]
   );
-
-  /**
-   * Load Key Insights (lazy-loaded on demand)
-   */
-  const loadKeyInsights = useCallback(async () => {
-    if (!state.analysis) {
-      throw new Error("Analysis not loaded");
-    }
-
-    if (state.analysis.key_insights) {
-      // Already loaded
-      return state.analysis;
-    }
-
-    setState((prev) => ({ ...prev, isLoadingKeyInsights: true, error: null }));
-    try {
-      const token = await getToken();
-      const updatedAnalysis = await analysisApi.computeKeyInsights(paperId, token);
-      setState((prev) => ({
-        ...prev,
-        analysis: updatedAnalysis,
-        isLoadingKeyInsights: false,
-      }));
-      return updatedAnalysis;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to load key insights";
-      setState((prev) => ({
-        ...prev,
-        isLoadingKeyInsights: false,
-        error: errorMessage,
-      }));
-      throw error;
-    }
-  }, [paperId, state.analysis, getToken]);
 
   /**
    * Load In-Depth Analysis (lazy-loaded on demand)
@@ -170,7 +131,6 @@ export function usePaperAnalysis(paperId: string) {
   return {
     ...state,
     analyze,
-    loadKeyInsights,
     loadInDepth,
   };
 }

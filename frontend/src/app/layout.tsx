@@ -49,7 +49,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(dmSans.className, "h-screen flex flex-col antialiased overflow-hidden")}>
-        <ClerkProvider>
+        <ClerkProvider
+          appearance={{
+            baseTheme: undefined,
+            variables: {
+              colorPrimary: "#f59e0b",
+              colorBackground: "#09090b",
+            },
+          }}
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

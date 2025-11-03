@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, Tuple, Dict, Any
-from ..models.analysis import AtAGlanceAnalysis, SuggestedQuestion
+from ..models.analysis import AtAGlanceAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -48,36 +48,6 @@ def create_fallback_at_a_glance(text_chunk: str) -> AtAGlanceAnalysis:
         methodology=methodology,
         key_result=key_result,
     )
-
-
-def create_fallback_suggested_questions() -> list[SuggestedQuestion]:
-    """
-    Create deterministic fallback suggested questions.
-    
-    Used when question generation fails.
-    """
-    return [
-        SuggestedQuestion(
-            question="What is the main methodology used in this paper?",
-            category="methodology",
-        ),
-        SuggestedQuestion(
-            question="What are the key results presented?",
-            category="results",
-        ),
-        SuggestedQuestion(
-            question="What limitations does the paper acknowledge?",
-            category="limitations",
-        ),
-        SuggestedQuestion(
-            question="What are the practical applications of this research?",
-            category="applications",
-        ),
-        SuggestedQuestion(
-            question="What datasets were used in this study?",
-            category="datasets",
-        ),
-    ]
 
 
 def extract_text_with_fallback(

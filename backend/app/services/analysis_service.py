@@ -20,9 +20,6 @@ from ..models.analysis import (
     PaperAnalysis,
     PaperMetadata,
     AtAGlanceAnalysis,
-    KeyInsightsAnalysis,
-    FigureExplanation,
-    SuggestedQuestion,
     InDepthAnalysis,
 )
 from ..models.paper import Paper
@@ -31,13 +28,10 @@ from fastapi import HTTPException
 from .analysis_helpers import (
     invoke_llm_with_retry,
     parse_at_a_glance_json,
-    parse_suggested_questions_json,
-    parse_limitations_future_work_json,
     parse_in_depth_json,
 )
 from .analysis_resilience import (
     create_fallback_at_a_glance,
-    create_fallback_suggested_questions,
     extract_text_with_fallback,
 )
 
@@ -95,9 +89,6 @@ class AnalysisService:
         
         prompt_files = {
             "at_a_glance": "at_a_glance.txt",
-            "suggested_questions": "suggested_questions.txt",
-            "limitations_future_work": "limitations_future_work.txt",
-            "figure_explanation": "figure_explanation.txt",
             "in_depth": "in_depth.txt",
         }
         
@@ -257,98 +248,7 @@ Paper text:
             )
         )
 
-    async def _generate_suggested_questions(self, full_text: str) -> List[SuggestedQuestion]:
-        """Generate suggested questions for the paper with retry logic."""
-        prompt_template = self.prompts.get("suggested_questions", "")
-        if not prompt_template:
-            prompt_template = """Based on this academic paper, generate 5 insightful questions a researcher might ask.
 
-Return ONLY valid JSON matching this exact structure (no markdown, no extra text):
-[
-  {{
-    "question": "Question text here?",
-    "category": "methodology"
-  }},
-  {{
-    "question": "Question text here?",
-    "category": "results"
-  }}
-]
-
-Valid categories: methodology, results, limitations, applications, datasets, reproducibility
-
-Paper text:
-{text}"""
-        
-        return await invoke_llm_with_retry(
-            self.llm,
-            prompt_template.format(text=full_text[:3000]),
-            response_parser=parse_suggested_questions_json,
-            fallback=[
-                SuggestedQuestion(question="What is the main methodology used in this paper?", category="methodology"),
-                SuggestedQuestion(question="What are the key results presented?", category="results"),
-                SuggestedQuestion(question="What limitations does the paper acknowledge?", category="limitations"),
-                SuggestedQuestion(question="What are the practical applications of this research?", category="applications"),
-                SuggestedQuestion(question="What datasets were used in this study?", category="datasets"),
-            ]
-        )
-
-    def _detect_figures_and_tables(self, page_map: Dict[int, str]) -> List[tuple[str, int]]:
-        """Detect figures and tables using regex and page lookup."""
-        pattern = r"^(Figure|Fig\.|Table|Tab\.)\s+(\d+)[:\.\s]"
-        detected = []
-        
-        for page_num, text in page_map.items():
-            lines = text.split("\n")
-            for line in lines:
-                match = re.match(pattern, line, re.IGNORECASE)
-                if match:
-                    detected.append((line.strip(), page_num))
-        
-        return detected
-
-    async def _generate_figure_explanation(self, label: str, caption: str) -> str:
-        """Generate explanation for a figure/table with retry logic."""
-        prompt_template = self.prompts.get("figure_explanation", "")
-        if not prompt_template:
-            prompt_template = """Explain what this figure/table shows in 2-3 sentences:
-
-Label: {label}
-Caption: {caption}
-
-Provide a clear, concise explanation."""
-        
-        prompt = prompt_template.format(label=label, caption=caption)
-        
-        return await invoke_llm_with_retry(
-            self.llm,
-            prompt,
-            response_parser=lambda r: r,
-            fallback="Unable to generate explanation"
-        )
-
-    async def _extract_limitations_and_future_work(self, full_text: str) -> tuple[List[str], List[str]]:
-        """Extract limitations and future work from paper with retry logic."""
-        prompt_template = self.prompts.get("limitations_future_work", "")
-        if not prompt_template:
-            prompt_template = """Extract the limitations and future work from this paper section.
-
-Return ONLY valid JSON matching this exact structure (no markdown, no extra text):
-{{
-  "limitations": ["limitation 1", "limitation 2"],
-  "future_work": ["future work 1", "future work 2"]
-}}
-
-Paper text:
-{text}"""
-        
-        result = await invoke_llm_with_retry(
-            self.llm,
-            prompt_template.format(text=full_text[-2000:]),
-            response_parser=parse_limitations_future_work_json,
-            fallback=([], [])
-        )
-        return result
 
     async def analyze_paper(
         self,
@@ -357,9 +257,7 @@ Paper text:
         user_id: Optional[str] = None
     ) -> PaperAnalysis:
         """
-        Analyze a paper and generate At-a-Glance + Suggested Questions.
-        
-        Does NOT compute Key Insights (lazy-loaded on demand).
+        Analyze a paper and generate At-a-Glance analysis.
         """
         try:
             # Fetch paper
@@ -385,12 +283,8 @@ Paper text:
             try:
                 full_text, page_map = await self._extract_text_with_pages(tmp_path)
                 
-                # Generate At-a-Glance and Suggested Questions in parallel
-                at_a_glance, suggested_questions = await asyncio.gather(
-                    self._generate_at_a_glance(full_text),
-                    self._generate_suggested_questions(full_text),
-                    return_exceptions=False
-                )
+                # Generate At-a-Glance analysis
+                at_a_glance = await self._generate_at_a_glance(full_text)
                 
                 # Create metadata
                 metadata = PaperMetadata(
@@ -406,8 +300,6 @@ Paper text:
                 analysis = PaperAnalysis(
                     paper=metadata,
                     at_a_glance=at_a_glance,
-                    key_insights=None,  # Lazy-loaded
-                    suggested_questions=suggested_questions,
                     generated_at=datetime.now(),
                     schema_version=settings.PROMPT_VERSION or "1.0.0",
                     model_tag=settings.ANALYZER_MODEL_TAG or "gemini-2.0-flash"
@@ -473,14 +365,6 @@ Paper text:
                         future_work=["Unable to extract future work"],
                         conclusion="Unable to extract conclusion"
                     ),
-                    key_insights=None,
-                    suggested_questions=[
-                        SuggestedQuestion(question="What is the main methodology used in this paper?", category="methodology"),
-                        SuggestedQuestion(question="What are the key results presented?", category="results"),
-                        SuggestedQuestion(question="What limitations does the paper acknowledge?", category="limitations"),
-                        SuggestedQuestion(question="What are the practical applications of this research?", category="applications"),
-                        SuggestedQuestion(question="What datasets were used in this study?", category="datasets"),
-                    ],
                     generated_at=datetime.now(),
                     schema_version=settings.PROMPT_VERSION or "1.0.0",
                     model_tag=settings.ANALYZER_MODEL_TAG or "gemini-2.0-flash",
@@ -516,89 +400,6 @@ Paper text:
             logger.error(f"Failed to retrieve analysis for {paper_id}: {str(e)}")
             return None
 
-    async def compute_key_insights(
-        self,
-        paper_id: str,
-        user_id: Optional[str] = None
-    ) -> PaperAnalysis:
-        """
-        Compute Key Insights (figures/limitations/future work) for a paper.
-        
-        First retrieves or generates the base analysis, then adds key insights.
-        """
-        try:
-            # Get or generate base analysis
-            analysis = await self.get_paper_analysis(paper_id, user_id)
-            if not analysis:
-                analysis = await self.analyze_paper(paper_id, user_id=user_id)
-            
-            # Fetch paper for text extraction
-            paper, pdf_bytes = await self._fetch_paper(paper_id)
-            
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(pdf_bytes)
-                tmp_path = tmp.name
-            
-            try:
-                full_text, page_map = await self._extract_text_with_pages(tmp_path)
-                
-                # Detect figures and tables
-                detected = self._detect_figures_and_tables(page_map)
-                
-                # Generate explanations for figures/tables and limitations/future work in parallel
-                figure_tasks = [
-                    self._generate_figure_explanation(label, label)
-                    for label, _ in detected[:5]
-                ]
-                
-                explanations, (limitations, future_work) = await asyncio.gather(
-                    asyncio.gather(*figure_tasks, return_exceptions=False) if figure_tasks else asyncio.sleep(0),
-                    self._extract_limitations_and_future_work(full_text),
-                    return_exceptions=False
-                )
-                
-                # Build figures list
-                figures = []
-                for (label, page_num), explanation in zip(detected[:5], explanations if figure_tasks else []):
-                    figures.append(FigureExplanation(
-                        label=label,
-                        caption=label,
-                        explanation=explanation,
-                        page=page_num
-                    ))
-                
-                # Create key insights
-                key_insights = KeyInsightsAnalysis(
-                    figures=figures,
-                    limitations=limitations if isinstance(limitations, list) else [],
-                    future_work=future_work if isinstance(future_work, list) else []
-                )
-                
-                # Update analysis with key insights
-                analysis.key_insights = key_insights
-                
-                # Cache the updated analysis
-                paper_hash = self._get_paper_hash(paper_id, pdf_bytes)
-                cache_key = self._get_cache_key(paper_hash)
-                
-                if self.cache:
-                    try:
-                        ttl = 3600 if os.getenv("ENV") == "dev" else 86400
-                        self.cache.setex(cache_key, ttl, analysis.model_dump_json())
-                    except Exception as e:
-                        logger.warning(f"Cache write failed: {str(e)}")
-                
-                return analysis
-                
-            finally:
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
-        
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(f"Failed to compute key insights for {paper_id}: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Key insights computation failed: {str(e)}")
 
     async def compute_in_depth(
         self,

@@ -29,30 +29,6 @@ export type AtAGlanceAnalysis = {
   conclusion: string;
 };
 
-export type FigureExplanation = {
-  label: string;
-  caption: string;
-  explanation: string;
-  page: number;
-};
-
-export type KeyInsightsAnalysis = {
-  figures: FigureExplanation[];
-  limitations: string[];
-  future_work: string[];
-};
-
-export type SuggestedQuestion = {
-  question: string;
-  category:
-    | "methodology"
-    | "results"
-    | "limitations"
-    | "applications"
-    | "datasets"
-    | "reproducibility";
-};
-
 export type InDepthAnalysis = {
   introduction: string;
   related_work: string;
@@ -67,9 +43,7 @@ export type InDepthAnalysis = {
 export type PaperAnalysis = {
   paper: PaperMetadata;
   at_a_glance: AtAGlanceAnalysis;
-  key_insights?: KeyInsightsAnalysis | null;
   in_depth?: InDepthAnalysis | null;
-  suggested_questions: SuggestedQuestion[];
   generated_at: string;
   schema_version: string;
   model_tag: string;

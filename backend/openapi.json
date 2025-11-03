@@ -661,7 +661,7 @@
           "analysis"
         ],
         "summary": "Analyze Paper",
-        "description": "Analyze a paper and generate At-a-Glance summary + Suggested Questions.\n\n- Generates or refreshes the At-a-Glance + Suggested Questions immediately.\n- Does NOT compute Key Insights unless asked (lazy).\n- Returns PaperAnalysis (key_insights may be null).\n\nArgs:\n    paper_id: The ID of the paper to analyze\n    force_refresh: If True, bypass cache and regenerate analysis\n    current_user: Authenticated user\n\nReturns:\n    PaperAnalysis with at_a_glance and suggested_questions populated",
+        "description": "Analyze a paper and generate At-a-Glance summary.\n\n- Generates or refreshes the At-a-Glance analysis immediately.\n- Returns PaperAnalysis (in_depth may be null).\n\nArgs:\n    paper_id: The ID of the paper to analyze\n    force_refresh: If True, bypass cache and regenerate analysis\n    current_user: Authenticated user\n\nReturns:\n    PaperAnalysis with at_a_glance populated",
         "operationId": "analyzePaper",
         "security": [
           {
@@ -719,56 +719,8 @@
           "analysis"
         ],
         "summary": "Get Paper Analysis",
-        "description": "Retrieve the latest PaperAnalysis (including cached Key Insights if computed).\n\nArgs:\n    paper_id: The ID of the paper\n    current_user: Authenticated user\n\nReturns:\n    PaperAnalysis with all available data",
+        "description": "Retrieve the latest PaperAnalysis (including cached In-Depth if computed).\n\nArgs:\n    paper_id: The ID of the paper\n    current_user: Authenticated user\n\nReturns:\n    PaperAnalysis with all available data",
         "operationId": "getPaperAnalysis",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "paper_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Paper Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaperAnalysis"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/{paper_id}/key-insights": {
-      "post": {
-        "tags": [
-          "analysis"
-        ],
-        "summary": "Compute Key Insights",
-        "description": "Trigger Key Insights computation (figures/limitations/future work).\n\n- Detects figures and tables with captions\n- Extracts limitations and future work from paper\n- Returns PaperAnalysis with key_insights populated\n\nArgs:\n    paper_id: The ID of the paper\n    current_user: Authenticated user\n\nReturns:\n    PaperAnalysis with key_insights populated",
-        "operationId": "computeKeyInsights",
         "security": [
           {
             "HTTPBearer": []
@@ -1134,7 +1086,7 @@
                 "Author 2"
               ],
               "id": "paper_id",
-              "published": "2025-10-27T13:33:05.920653",
+              "published": "2025-11-03T13:51:39.373649",
               "summary": "Paper summary",
               "title": "Paper Title",
               "url": "http://example.com/paper.pdf"
@@ -1144,34 +1096,6 @@
           "format": "pdf",
           "topic": "Research Topic"
         }
-      },
-      "FigureExplanation": {
-        "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "caption": {
-            "type": "string",
-            "title": "Caption"
-          },
-          "explanation": {
-            "type": "string",
-            "title": "Explanation"
-          },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          }
-        },
-        "type": "object",
-        "required": [
-          "label",
-          "caption",
-          "explanation",
-          "page"
-        ],
-        "title": "FigureExplanation"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1235,38 +1159,6 @@
         "title": "InDepthAnalysis",
         "description": "Comprehensive, detailed analysis of each paper section."
       },
-      "KeyInsightsAnalysis": {
-        "properties": {
-          "figures": {
-            "items": {
-              "$ref": "#/components/schemas/FigureExplanation"
-            },
-            "type": "array",
-            "title": "Figures"
-          },
-          "limitations": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Limitations"
-          },
-          "future_work": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Future Work"
-          }
-        },
-        "type": "object",
-        "required": [
-          "figures",
-          "limitations",
-          "future_work"
-        ],
-        "title": "KeyInsightsAnalysis"
-      },
       "Paper": {
         "properties": {
           "id": {
@@ -1323,16 +1215,6 @@
           "at_a_glance": {
             "$ref": "#/components/schemas/AtAGlanceAnalysis"
           },
-          "key_insights": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/KeyInsightsAnalysis"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "in_depth": {
             "anyOf": [
               {
@@ -1342,13 +1224,6 @@
                 "type": "null"
               }
             ]
-          },
-          "suggested_questions": {
-            "items": {
-              "$ref": "#/components/schemas/SuggestedQuestion"
-            },
-            "type": "array",
-            "title": "Suggested Questions"
           },
           "generated_at": {
             "type": "string",
@@ -1370,7 +1245,6 @@
         "required": [
           "paper",
           "at_a_glance",
-          "suggested_questions",
           "generated_at"
         ],
         "title": "PaperAnalysis"
@@ -1468,32 +1342,6 @@
           "max_papers": 10,
           "topic": "Recent advances in transformer architectures for natural language processing"
         }
-      },
-      "SuggestedQuestion": {
-        "properties": {
-          "question": {
-            "type": "string",
-            "title": "Question"
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "methodology",
-              "results",
-              "limitations",
-              "applications",
-              "datasets",
-              "reproducibility"
-            ],
-            "title": "Category"
-          }
-        },
-        "type": "object",
-        "required": [
-          "question",
-          "category"
-        ],
-        "title": "SuggestedQuestion"
       },
       "TaskResponse": {
         "properties": {
