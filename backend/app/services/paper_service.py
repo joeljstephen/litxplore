@@ -3,6 +3,7 @@ from typing import List, Dict, Any, AsyncGenerator  # Add Dict, Any, and AsyncGe
 import tempfile
 import os
 import requests
+import logging
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -173,21 +174,44 @@ class PaperService:
             with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_pdf:
                 content = await file.read()
                 
-                # Additional security check
+                # Additional security checks
                 if len(content) == 0:
                     raise ValueError("Empty file provided")
                 
+                # Verify file size (max 15MB)
+                MAX_FILE_SIZE = 15 * 1024 * 1024
+                if len(content) > MAX_FILE_SIZE:
+                    raise ValueError(f"File size exceeds maximum allowed size of 15MB")
+                
                 # Check for potentially malicious markers in PDF content
-                # These checks are basic and not comprehensive - consider using a dedicated security library
-                suspicious_markers = [
-                    b"JS", b"/JavaScript", b"/JS ", b"/Launch", b"/OpenAction",
-                    b"/AA", b"/AcroForm", b"/XFA", b"getAnnots"
+                # These checks detect common PDF-based attack vectors
+                # We check for PDF object patterns, not just strings that might appear in text
+                # Note: /OpenAction is common in academic PDFs for navigation, so we exclude it
+                suspicious_patterns = [
+                    b"/javascript", b"/js ", b"/launch",
+                    b"/aa ", b"/acroform", b"/xfa", b"/embeddedfile",
+                    b"/richmedia", b"/flash", b"/gotor", b"/importdata",
+                    b"/submitform"
                 ]
                 
-                content_sample = content[:5000].lower()  # Check only beginning of file
-                for marker in suspicious_markers:
-                    if marker.lower() in content_sample:
-                        raise ValueError(f"Potentially malicious content detected: {marker.decode()}")
+                # Check first 10KB and last 5KB for suspicious content
+                # We look for PDF object patterns (with forward slash) to avoid false positives
+                content_start = content[:10000].lower()
+                content_end = content[-5000:].lower() if len(content) > 5000 else b""
+                
+                for pattern in suspicious_patterns:
+                    if pattern in content_start:
+                        # Log the detection for debugging
+                        logging.warning(f"Detected pattern {pattern} in first 10KB of PDF")
+                        raise ValueError(f"Potentially malicious PDF object detected: {pattern.decode()}")
+                    if pattern in content_end:
+                        # Log the detection for debugging
+                        logging.warning(f"Detected pattern {pattern} in last 5KB of PDF")
+                        raise ValueError(f"Potentially malicious PDF object detected: {pattern.decode()}")
+                
+                # Verify PDF magic number
+                if not content.startswith(b'%PDF-'):
+                    raise ValueError("Invalid PDF file format")
                 
                 temp_pdf.write(content)
                 temp_pdf_path = temp_pdf.name

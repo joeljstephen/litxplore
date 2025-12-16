@@ -14,16 +14,24 @@ export function PDFViewer({ url }: PDFViewerProps) {
     );
   }
 
-  // Ensure URL is using HTTPS
-  const secureUrl = url.startsWith("https://")
-    ? url
-    : url.startsWith("http://")
-    ? url.replace("http://", "https://")
-    : `https://${url}`;
+  // Determine the correct URL based on the source
+  let pdfUrl: string;
+  
+  if (url.startsWith("/uploads/")) {
+    // Uploaded PDF - construct full backend URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    pdfUrl = `${apiUrl}${url}`;
+  } else if (url.startsWith("http://") || url.startsWith("https://")) {
+    // External URL (arXiv) - use as is
+    pdfUrl = url;
+  } else {
+    // Fallback for other cases
+    pdfUrl = url.startsWith("https://") ? url : `https://${url}`;
+  }
 
   return (
     <iframe
-      src={secureUrl}
+      src={pdfUrl}
       className="w-full h-full"
       style={{
         height: "100%",

@@ -10,17 +10,19 @@ import {
 import { PaperGrid } from "@/components/paper-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { PDFUpload } from "@/components/pdf-upload";
 
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [searchInput, setSearchInput] = useState(query);
+  const [uploadedPapers, setUploadedPapers] = useState<Paper[]>([]);
 
   const { data: papers, isLoading } = useSearchPapers(
     { query },
@@ -32,11 +34,21 @@ function SearchPageContent() {
     }
   );
 
+  // Combine search results with uploaded papers
+  const allPapers = [...uploadedPapers, ...(papers || [])];
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
     }
+  };
+
+  const handlePaperUpload = (paper: Paper) => {
+    // Add uploaded paper to the list
+    setUploadedPapers((prev) => [paper, ...prev]);
+    // Automatically navigate to analyzer for the uploaded paper
+    router.push(`/papers/${paper.id}/analyze`);
   };
 
   // Animation variants
@@ -71,26 +83,47 @@ function SearchPageContent() {
         <div className="flex items-center gap-3 mb-10">
           <Search className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            Search
+            Analyze Papers
           </h1>
         </div>
 
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search papers..."
-            className="flex-1"
-          />
-          <Button type="submit">
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4 mr-2" />
-            )}
-            Search
-          </Button>
-        </form>
+        {/* Search Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">
+            Search arXiv Papers
+          </h2>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search papers on arXiv..."
+              className="flex-1"
+            />
+            <Button type="submit">
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              Search
+            </Button>
+          </form>
+        </div>
+
+        {/* Upload Section */}
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center gap-3">
+            <Upload className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">
+              Upload Your Own PDF
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Upload a research paper PDF (max 15MB) to analyze it with AI. We
+            check for malicious content to ensure your safety.
+          </p>
+          <PDFUpload onPaperAdd={handlePaperUpload} currentPaperCount={0} />
+        </div>
 
         {query && (
           <motion.h1
@@ -122,13 +155,21 @@ function SearchPageContent() {
             ))}
           </motion.div>
         ) : (
-          papers && (
+          allPapers.length > 0 && (
             <PaperGrid
-              papers={papers}
+              papers={allPapers}
               onPaperSelect={(paperId, selected) => {
               }}
             />
           )
+        )}
+
+        {!isLoading && !query && uploadedPapers.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              Search for papers on arXiv or upload your own PDF to get started
+            </p>
+          </div>
         )}
 
       </div>

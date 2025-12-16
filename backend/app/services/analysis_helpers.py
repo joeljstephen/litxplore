@@ -63,6 +63,9 @@ def parse_in_depth_json(response_text: str) -> InDepthAnalysis:
     import re
     
     try:
+        logger.info(f"Parsing in-depth analysis. Response length: {len(response_text)} chars")
+        logger.info(f"Response preview (first 500 chars): {response_text[:500]}")
+        
         json_text = extract_json_from_response(response_text)
         logger.debug(f"Extracted in-depth JSON text (first 200 chars): {json_text[:200]}")
         
