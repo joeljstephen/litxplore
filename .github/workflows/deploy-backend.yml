@@ -10,7 +10,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: joeljacobstephen/litxplore-backend
 
 jobs:
   build-and-deploy:
@@ -37,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/litxplore-backend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -60,4 +59,4 @@ jobs:
         run: |
           echo "✅ Backend image pushed successfully!"
           echo "🔄 Watchtower will automatically pull and deploy the new image within 5 minutes"
-          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/litxplore-backend:latest"

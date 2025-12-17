@@ -1,15 +1,33 @@
 "use client";
 
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Paper } from "@/lib/api/generated";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+// Helper function to extract text content from UIMessage parts
+function getMessageContent(message: UIMessage | { content: string }): string {
+  // Handle the welcome message which uses the old format
+  if ("content" in message && typeof message.content === "string") {
+    return message.content;
+  }
+  // Handle UIMessage with parts
+  const uiMessage = message as UIMessage;
+  if (!uiMessage.parts || uiMessage.parts.length === 0) {
+    return "";
+  }
+  return uiMessage.parts
+    .filter((part) => part.type === "text")
+    .map((part) => (part as { type: "text"; text: string }).text)
+    .join("");
+}
 
 interface ChatInterfaceProps {
   paper: Paper;
@@ -25,6 +43,7 @@ export function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [inputRows, setInputRows] = useState(1);
+  const [input, setInput] = useState("");
 
   // Research paper expert system prompt
   const researchExpertPrompt = `
@@ -41,19 +60,34 @@ export function ChatInterface({
     Aim to help users gain a comprehensive, graduate-level understanding of this research paper.
   `;
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
       api: "/api/chat",
       body: {
         paperId: paper.id,
-        model: "gemini-2.0-flash", // Specify model as requested
-        systemPrompt: researchExpertPrompt, // Add custom system prompt
+        model: "gemini-2.0-flash",
+        systemPrompt: researchExpertPrompt,
       },
-      onFinish: () => {
-        scrollToBottom();
-        inputRef.current?.focus();
-      },
-    });
+    }),
+    onFinish: () => {
+      scrollToBottom();
+      inputRef.current?.focus();
+    },
+  });
+
+  const isLoading = status === "streaming" || status === "submitted";
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      sendMessage({ text: input });
+      setInput("");
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
 
   // Adjust textarea height based on content
   useEffect(() => {
@@ -214,7 +248,7 @@ What would you like to know about this paper?`,
                         ),
                       }}
                     >
-                      {message.content}
+                      {getMessageContent(message)}
                     </ReactMarkdown>
                   </div>
                 </div>

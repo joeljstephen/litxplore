@@ -1,12 +1,23 @@
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 
 interface ChatMessageBubbleProps {
-  message: Message;
+  message: UIMessage;
   isLoading?: boolean;
+}
+
+// Helper function to extract text content from UIMessage parts
+function getMessageContent(message: UIMessage): string {
+  if (!message.parts || message.parts.length === 0) {
+    return "";
+  }
+  return message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => (part as { type: "text"; text: string }).text)
+    .join("");
 }
 
 export function ChatMessageBubble({
@@ -14,6 +25,7 @@ export function ChatMessageBubble({
   isLoading,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
+  const content = getMessageContent(message);
 
   return (
     <motion.div
@@ -91,7 +103,9 @@ export function ChatMessageBubble({
               <blockquote
                 className={cn(
                   "border-l-2 pl-2 italic",
-                  isUser ? "border-secondary text-secondary" : "border-persian-blue-300"
+                  isUser
+                    ? "border-secondary text-secondary"
+                    : "border-persian-blue-300"
                 )}
               >
                 {children}
@@ -99,7 +113,7 @@ export function ChatMessageBubble({
             ),
           }}
         >
-          {message.content}
+          {content}
         </ReactMarkdown>
 
         {message.role === "assistant" && message.id && (

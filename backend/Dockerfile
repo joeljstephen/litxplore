@@ -1,5 +1,5 @@
 # Use Python 3.12 slim as base image (latest stable with security patches)
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

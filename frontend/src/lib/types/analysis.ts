@@ -1,3 +1,8 @@
+export type SuggestedQuestion = {
+  question: string;
+  category: string;
+};
+
 export type PaperMetadata = {
   paper_id: string;
   title: string;
@@ -12,11 +17,11 @@ export type AtAGlanceAnalysis = {
   title: string;
   authors: string[];
   affiliations: string[];
-  
+
   // Abstract & Keywords
   abstract: string;
   keywords: string[];
-  
+
   // Paper Sections (in order)
   introduction: string;
   related_work: string;

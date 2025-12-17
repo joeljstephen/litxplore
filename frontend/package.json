@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.23",
+    "@ai-sdk/react": "^2.0.117",
     "@clerk/nextjs": "^6.33.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -58,7 +59,7 @@
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "@types/three": "^0.171.0",
-    "ai": "^3.4.33",
+    "ai": "^5.0.115",
     "autoprefixer": "10.4.15",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.0",
@@ -67,12 +68,11 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
-    "eslint-config-next": "14.2.33",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
     "mini-svg-data-uri": "^1.4.4",
-    "next": "14.2.33",
+    "next": "^14.2.35",
     "next-themes": "^0.3.0",
     "openai": "^4.85.1",
     "orval": "^7.13.2",
@@ -107,7 +107,7 @@
     "chokidar": "^3.6.0",
     "concurrently": "^9.2.1",
     "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.33",
+    "eslint-config-next": "^14.2.35",
     "tsx": "^4.20.6"
   }
 }
