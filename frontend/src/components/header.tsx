@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Search, BookOpen, Clock, Menu, X } from "lucide-react";
 import { useState } from "react";
 
-export function Header() {
+function NavContent() {
   const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -32,88 +32,70 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex h-14 items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200">
-                LitXplore
-              </span>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-2">
-            {isLoaded && isSignedIn &&
-              navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-lg text-foreground/70 transition-all duration-200 hover:text-primary-foreground hover:bg-accent",
-                    pathname === item.href &&
-                      "text-primary-foreground bg-accent"
-                  )}
-                  title={item.label}
-                >
-                  {item.icon}
-                </Link>
-              ))}
-
-            {!isLoaded ? (
-              <div className="h-9 w-9 ml-2 rounded-full bg-muted animate-pulse" />
-            ) : isSignedIn ? (
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: "h-9 w-9 ml-2",
-                  },
-                }}
-              />
-            ) : (
-              <div className="flex items-center space-x-2">
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Sign In
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant="gradient" size="sm">
-                    Get Started
-                  </Button>
-                </SignUpButton>
-              </div>
+    <>
+      {/* Desktop Navigation */}
+      <nav className="hidden md:flex items-center space-x-2">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center justify-center h-10 w-10 rounded-lg text-foreground/70 transition-all duration-200 hover:text-primary-foreground hover:bg-accent",
+              pathname === item.href && "text-primary-foreground bg-accent"
             )}
-          </nav>
-
-          {/* Mobile menu button */}
-          <button
-            className="flex md:hidden items-center justify-center h-10 w-10 rounded-lg text-foreground/70 hover:text-primary hover:bg-accent transition-all duration-200"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
+            title={item.label}
           >
-            <div className="relative w-5 h-5">
-              <X
-                className={cn(
-                  "absolute inset-0 h-5 w-5 transition-all duration-200",
-                  mobileMenuOpen
-                    ? "opacity-100 rotate-0"
-                    : "opacity-0 rotate-90"
-                )}
-              />
-              <Menu
-                className={cn(
-                  "absolute inset-0 h-5 w-5 transition-all duration-200",
-                  mobileMenuOpen
-                    ? "opacity-0 -rotate-90"
-                    : "opacity-100 rotate-0"
-                )}
-              />
-            </div>
-          </button>
+            {item.icon}
+          </Link>
+        ))}
+
+        {!isLoaded ? (
+          <div className="h-9 w-9 ml-2 rounded-full bg-muted animate-pulse" />
+        ) : isSignedIn ? (
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "h-9 w-9 ml-2",
+              },
+            }}
+          />
+        ) : (
+          <div className="flex items-center space-x-2 ml-2">
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="sm">
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button variant="gradient" size="sm">
+                Get Started
+              </Button>
+            </SignUpButton>
+          </div>
+        )}
+      </nav>
+
+      {/* Mobile menu button */}
+      <button
+        className="flex md:hidden items-center justify-center h-10 w-10 rounded-lg text-foreground/70 hover:text-primary hover:bg-accent transition-all duration-200"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label="Toggle mobile menu"
+      >
+        <div className="relative w-5 h-5">
+          <X
+            className={cn(
+              "absolute inset-0 h-5 w-5 transition-all duration-200",
+              mobileMenuOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"
+            )}
+          />
+          <Menu
+            className={cn(
+              "absolute inset-0 h-5 w-5 transition-all duration-200",
+              mobileMenuOpen ? "opacity-0 -rotate-90" : "opacity-100 rotate-0"
+            )}
+          />
         </div>
-      </div>
+      </button>
 
       {/* Mobile Navigation */}
       <div
@@ -142,8 +124,7 @@ export function Header() {
                     appearance={{
                       elements: {
                         userButtonAvatarBox: "h-10 w-10",
-                        userButtonTrigger:
-                          "hover:opacity-80 transition-opacity",
+                        userButtonTrigger: "hover:opacity-80 transition-opacity",
                       },
                     }}
                   />
@@ -190,6 +171,34 @@ export function Header() {
               </SignUpButton>
             </div>
           )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function Header() {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
+  return (
+    <header className={cn(
+      "sticky top-0 z-50 w-full backdrop-blur-md",
+      isHomePage
+        ? "bg-primary/5"
+        : "bg-background/80"
+    )}>
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex h-14 items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200">
+                LitXplore
+              </span>
+            </Link>
+          </div>
+
+          <NavContent />
         </div>
       </div>
     </header>

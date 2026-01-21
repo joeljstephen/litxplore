@@ -10,37 +10,50 @@ import {
   BookOpenCheck,
   MessageSquareText,
   Sparkles,
-  Zap,
-  FileText,
-  BookMarked,
 } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
+        {/* Simplified gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+
         {/* Hero content */}
-        <div className="container mx-auto px-4 pt-24 pb-16">
+        <div className="relative container mx-auto px-4 pt-32 pb-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             className="text-center max-w-3xl mx-auto"
           >
+            {/* Badge - CSS animation only */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                AI-Powered Research Platform
+              </span>
+            </div>
+
             <h1 className="text-6xl font-bold mb-6 text-foreground tracking-tight">
               LitXplore
             </h1>
-            <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-              Your AI-powered research companion for deep paper analysis and
-              comprehensive literature review generation
+            <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-2xl mx-auto">
+              Transform how you read and understand research papers with AI-driven
+              analysis and intelligent literature review generation
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="rounded-xl px-8">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-xl px-8 shadow-lg shadow-primary/25 hover:shadow-primary/35 transition-shadow"
+              >
                 <Link href="/search" className="flex items-center gap-2">
                   <MessageSquareText className="h-5 w-5" />
                   <span>Analyze Papers</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
 
@@ -48,203 +61,170 @@ export default function Home() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="rounded-xl px-8"
+                className="rounded-xl px-8 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all"
               >
                 <Link href="/review" className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   <span>Generate Review</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
+            </div>
+
+            {/* Trust indicators - CSS animation only */}
+            <div className="mt-16 flex items-center justify-center gap-8 text-sm text-muted-foreground animate-in fade-in duration-700 delay-300">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span>arXiv Integrated</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span>AI Analysis</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span>Export Ready</span>
+              </div>
             </div>
           </motion.div>
         </div>
       </div>
 
       {/* Bento Grid Layout Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-24">
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-center mb-12"
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
         >
           <h2 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
-            Explore
+            Powerful Features
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Everything you need to understand research papers and synthesize
             knowledge
           </p>
         </motion.div>
 
-        {/* Main Features Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Feature 1 - Paper Analyzer (Primary Feature) */}
+        {/* Main Features Grid - simplified animations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Feature 1 - Paper Analyzer */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 p-8 relative overflow-hidden group hover:border-primary/40 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.4 }}
+            className="group rounded-3xl bg-gradient-to-br from-primary/8 via-primary/5 to-background border border-primary/15 p-10 relative overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500"
           >
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-6">
-                <MessageSquareText className="h-7 w-7 text-primary" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-8 ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-500">
+                <MessageSquareText className="h-8 w-8 text-primary" />
               </div>
 
-              <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
+              <h3 className="text-3xl font-bold mb-5 text-foreground tracking-tight">
                 Paper Analyzer
               </h3>
 
-              <p className="text-base text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-base text-muted-foreground mb-8 leading-relaxed">
                 Deep dive into any research paper with comprehensive AI-powered
                 analysis:
               </p>
 
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      At-a-Glance Summary:
-                    </strong>{" "}
-                    Instant overview of key contributions, methodology, and
-                    results
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      In-Depth Analysis:
-                    </strong>{" "}
-                    Detailed breakdown of all major sections including
-                    methodology, limitations, and future work
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      Interactive Chat:
-                    </strong>{" "}
-                    Ask questions and get contextual answers from the paper
-                    content
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">Key Insights:</strong>{" "}
-                    Explore figures, limitations, and future research directions
-                  </span>
-                </li>
+              <ul className="space-y-4 mb-10">
+                {[
+                  { title: "At-a-Glance Summary", description: "Instant overview of key contributions, methodology, and results" },
+                  { title: "In-Depth Analysis", description: "Detailed breakdown of all major sections including methodology, limitations, and future work" },
+                  { title: "Interactive Chat", description: "Ask questions and get contextual answers from the paper content" },
+                  { title: "Key Insights", description: "Explore figures, limitations, and future research directions" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-4">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2.5 flex-shrink-0 ring-4 ring-primary/10" />
+                    <span className="text-muted-foreground">
+                      <strong className="text-foreground font-medium">{item.title}:</strong> {item.description}
+                    </span>
+                  </li>
+                ))}
               </ul>
 
-              <Button asChild size="lg" className="rounded-xl">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-xl group-hover:bg-primary/90 transition-colors"
+              >
                 <Link href="/search" className="flex items-center gap-2">
                   <span>Start Analyzing</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
             </div>
 
-            {/* <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none">
-              <BookMarked className="h-48 w-48" />
-            </div> */}
+            {/* Corner accent - simplified */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </motion.div>
 
-          {/* Feature 2 - Literature Review Generation (Primary Feature) */}
+          {/* Feature 2 - Literature Review Generation */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 p-8 relative overflow-hidden group hover:border-primary/40 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.4 }}
+            className="group rounded-3xl bg-gradient-to-br from-primary/8 via-primary/5 to-background border border-primary/15 p-10 relative overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500"
           >
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-6">
-                <BookOpenCheck className="h-7 w-7 text-primary" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-8 ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-500">
+                <BookOpenCheck className="h-8 w-8 text-primary" />
               </div>
 
-              <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
-                Literature Review Generation
+              <h3 className="text-3xl font-bold mb-5 text-foreground tracking-tight">
+                Literature Review
               </h3>
 
-              <p className="text-base text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-base text-muted-foreground mb-8 leading-relaxed">
                 Transform hours of reading into comprehensive, well-structured
                 reviews:
               </p>
 
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      Smart Paper Selection:
-                    </strong>{" "}
-                    Search and select relevant papers from arXiv on your
-                    research topic
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      AI-Powered Synthesis:
-                    </strong>{" "}
-                    Automatically analyze and synthesize findings across
-                    multiple papers
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">
-                      Academic Format:
-                    </strong>{" "}
-                    Generate well-structured reviews with proper citations and
-                    references
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">Save & Export:</strong>{" "}
-                    Keep your reviews organized and export them for your
-                    research
-                  </span>
-                </li>
+              <ul className="space-y-4 mb-10">
+                {[
+                  { title: "Smart Paper Selection", description: "Search and select relevant papers from arXiv on your research topic" },
+                  { title: "AI-Powered Synthesis", description: "Automatically analyze and synthesize findings across multiple papers" },
+                  { title: "Academic Format", description: "Generate well-structured reviews with proper citations and references" },
+                  { title: "Save & Export", description: "Keep your reviews organized and export them for your research" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-4">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2.5 flex-shrink-0 ring-4 ring-primary/10" />
+                    <span className="text-muted-foreground">
+                      <strong className="text-foreground font-medium">{item.title}:</strong> {item.description}
+                    </span>
+                  </li>
+                ))}
               </ul>
 
               <Button
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-xl"
+                className="rounded-xl border-primary/25 hover:bg-primary/10 hover:border-primary/40 transition-all"
               >
                 <Link href="/review" className="flex items-center gap-2">
                   <span>Generate Review</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
             </div>
 
-            <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none">
-              <FileText className="h-48 w-48" />
-            </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </motion.div>
         </div>
 
-        {/* Supporting Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Supporting Features - no animations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Paper Search */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 p-8 relative overflow-hidden group hover:border-primary/40 transition-all duration-300"
-          >
+          <div className="group rounded-3xl bg-gradient-to-br from-primary/8 via-primary/5 to-background border border-primary/15 p-8 relative overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-6 ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-500">
                 <Search className="h-7 w-7 text-primary" />
               </div>
 
@@ -258,20 +238,13 @@ export default function Home() {
               </p>
             </div>
 
-            {/* <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none">
-              <Search className="h-32 w-32" />
-            </div> */}
-          </motion.div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
 
           {/* AI-Powered */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 p-8 relative overflow-hidden group hover:border-primary/40 transition-all duration-300"
-          >
+          <div className="group rounded-3xl bg-gradient-to-br from-primary/8 via-primary/5 to-background border border-primary/15 p-8 relative overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-6 ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-500">
                 <Sparkles className="h-7 w-7 text-primary" />
               </div>
 
@@ -285,80 +258,106 @@ export default function Home() {
               </p>
             </div>
 
-            {/* <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none">
-              <Sparkles className="h-32 w-32" />
-            </div> */}
-          </motion.div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
         </div>
       </div>
 
       {/* How It Works Section */}
-      <div className="container mx-auto px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
-            Simple Research Workflow
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            From paper discovery to comprehensive understanding in minutes
-          </p>
-        </motion.div>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.02] to-background" />
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {[
-            {
-              step: "1",
-              title: "Search Papers",
-              description:
-                "Search arXiv for papers on your research topic or upload your own PDF",
-              icon: Search,
-              delay: 0,
-            },
-            {
-              step: "2",
-              title: "Analyze or Review",
-              description:
-                "Get deep insights from individual papers or generate a comprehensive literature review",
-              icon: Sparkles,
-              delay: 0.1,
-            },
-            {
-              step: "3",
-              title: "Explore & Export",
-              description:
-                "Chat with papers, explore findings, and export your reviews for your research",
-              icon: BookOpen,
-              delay: 0.2,
-            },
-          ].map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: item.delay }}
-              className="flex flex-col items-center text-center"
-            >
-              <div className="w-20 h-20 rounded-2xl mb-4 bg-primary/10 flex items-center justify-center border border-primary/20">
-                <item.icon className="h-10 w-10 text-primary" />
-              </div>
-              <div className="text-sm font-bold text-primary mb-2">
-                STEP {item.step}
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground tracking-tight">
-                {item.title}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {item.description}
-              </p>
-            </motion.div>
-          ))}
+        <div className="relative container mx-auto px-4 py-32">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
+              How It Works
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              From paper discovery to comprehensive understanding in minutes
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto relative">
+            {/* Connector line (desktop only) */}
+            <div className="hidden md:block absolute top-24 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+            {[
+              { step: "1", title: "Search Papers", description: "Search arXiv for papers on your research topic or upload your own PDF", icon: Search },
+              { step: "2", title: "Analyze or Review", description: "Get deep insights from individual papers or generate a comprehensive literature review", icon: Sparkles },
+              { step: "3", title: "Explore & Export", description: "Chat with papers, explore findings, and export your reviews for your research", icon: BookOpen },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="flex flex-col items-center text-center group"
+              >
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 group-hover:scale-105 transition-all duration-500 shadow-lg shadow-primary/5">
+                    <item.icon className="h-12 w-12 text-primary" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary text-foreground flex items-center justify-center text-sm font-bold shadow-lg">
+                    {item.step}
+                  </div>
+                </div>
+
+                <h3 className="text-2xl font-semibold mb-3 text-foreground tracking-tight">
+                  {item.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed px-4">
+                  {item.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* Footer CTA */}
+      <div className="container mx-auto px-4 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-16 text-center overflow-hidden"
+        >
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
+              Ready to Transform Your Research?
+            </h2>
+            <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
+              Join thousands of researchers using LitXplore to accelerate their
+              literature review process
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-xl px-8 shadow-lg shadow-primary/25 hover:shadow-primary/35 transition-shadow"
+              >
+                <Link href="/search" className="flex items-center gap-2">
+                  <span>Get Started</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Simplified corner accents - reduced blur */}
+          <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-primary/10 to-transparent opacity-50 rounded-full blur-2xl" />
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-primary/10 to-transparent opacity-50 rounded-full blur-2xl" />
+        </motion.div>
       </div>
     </div>
   );

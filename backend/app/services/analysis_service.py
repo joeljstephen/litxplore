@@ -12,8 +12,7 @@ import arxiv
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from pydantic import ValidationError
 
 from ..models.analysis import (
@@ -42,17 +41,14 @@ settings = get_settings()
 class AnalysisService:
     def __init__(self):
         try:
-            if not settings.OPENAI_API_KEY:
-                raise ValueError("OPENAI_API_KEY not found in environment variables")
-            
-            self.embeddings = OpenAIEmbeddings(
-                model="text-embedding-ada-002",
-                openai_api_key=settings.OPENAI_API_KEY,
-            )
-
             if not settings.GEMINI_API_KEY:
                 raise ValueError("GEMINI_API_KEY not found in environment variables")
-                
+
+            self.embeddings = GoogleGenerativeAIEmbeddings(
+                model="models/embedding-001",
+                google_api_key=settings.GEMINI_API_KEY,
+            )
+
             self.llm = ChatGoogleGenerativeAI(
                 model="gemini-2.0-flash",
                 google_api_key=settings.GEMINI_API_KEY,

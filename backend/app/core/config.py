@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     
     # API Keys
     GEMINI_API_KEY: str
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None  # Deprecated: No longer used, kept for backward compatibility
 
     # Redis Settings
     REDIS_HOST: str
