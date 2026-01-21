@@ -21,7 +21,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
 
         {/* Hero content */}
-        <div className="relative container mx-auto px-4 pt-32 pb-24">
+        <div className="relative container mx-auto px-4 pt-32 pb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -91,7 +91,7 @@ export default function Home() {
       </div>
 
       {/* Bento Grid Layout Section */}
-      <div className="container mx-auto px-4 py-24">
+      <div className="container mx-auto px-4 pt-16 pb-24">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -160,8 +160,11 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* Corner accent - simplified */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Corner accent - improved */}
+            <div className="absolute top-0 right-0 w-3/4 h-3/4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(var(--primary), 0.15) 0%, rgba(var(--primary), 0.08) 25%, rgba(var(--primary), 0.02) 50%, transparent 70%)',
+              filter: 'blur(8px)'
+            }} />
           </motion.div>
 
           {/* Feature 2 - Literature Review Generation */}
@@ -215,7 +218,10 @@ export default function Home() {
               </Button>
             </div>
 
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 right-0 w-3/4 h-3/4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(var(--primary), 0.15) 0%, rgba(var(--primary), 0.08) 25%, rgba(var(--primary), 0.02) 50%, transparent 70%)',
+              filter: 'blur(8px)'
+            }} />
           </motion.div>
         </div>
 
@@ -238,7 +244,10 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 right-0 w-2/3 h-2/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(var(--primary), 0.12) 0%, rgba(var(--primary), 0.06) 25%, rgba(var(--primary), 0.02) 50%, transparent 70%)',
+              filter: 'blur(6px)'
+            }} />
           </div>
 
           {/* AI-Powered */}
@@ -258,7 +267,10 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 right-0 w-2/3 h-2/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(var(--primary), 0.12) 0%, rgba(var(--primary), 0.06) 25%, rgba(var(--primary), 0.02) 50%, transparent 70%)',
+              filter: 'blur(6px)'
+            }} />
           </div>
         </div>
       </div>
@@ -284,9 +296,6 @@ export default function Home() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto relative">
-            {/* Connector line (desktop only) */}
-            <div className="hidden md:block absolute top-24 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
             {[
               { step: "1", title: "Search Papers", description: "Search arXiv for papers on your research topic or upload your own PDF", icon: Search },
               { step: "2", title: "Analyze or Review", description: "Get deep insights from individual papers or generate a comprehensive literature review", icon: Sparkles },
@@ -322,43 +331,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer CTA */}
-      <div className="container mx-auto px-4 pb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5 }}
-          className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-16 text-center overflow-hidden"
-        >
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
-              Ready to Transform Your Research?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
-              Join thousands of researchers using LitXplore to accelerate their
-              literature review process
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-xl px-8 shadow-lg shadow-primary/25 hover:shadow-primary/35 transition-shadow"
-              >
-                <Link href="/search" className="flex items-center gap-2">
-                  <span>Get Started</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Simplified corner accents - reduced blur */}
-          <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-primary/10 to-transparent opacity-50 rounded-full blur-2xl" />
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-primary/10 to-transparent opacity-50 rounded-full blur-2xl" />
-        </motion.div>
-      </div>
     </div>
   );
 }

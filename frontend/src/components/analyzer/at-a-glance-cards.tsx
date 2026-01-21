@@ -67,7 +67,7 @@ interface SectionCardProps {
 
 export function SectionCard({ title, content }: SectionCardProps) {
   return (
-    <Card>
+    <Card className="break-inside-avoid">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
@@ -87,7 +87,7 @@ interface ListSectionCardProps {
 
 export function ListSectionCard({ title, items }: ListSectionCardProps) {
   return (
-    <Card>
+    <Card className="break-inside-avoid">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
@@ -115,44 +115,44 @@ export function AtAGlanceCards({ analysis }: AtAGlanceCardsProps) {
   return (
     <div className="@container space-y-4">
       {/* Title, Authors, Affiliations - Always full width */}
-      <BasicInfoCard 
+      <BasicInfoCard
         title={analysis.title}
         authors={analysis.authors}
         affiliations={analysis.affiliations}
       />
-      
+
       {/* Abstract and Keywords - Always full width */}
-      <AbstractCard 
+      <AbstractCard
         abstract={analysis.abstract}
         keywords={analysis.keywords}
       />
-      
-      {/* Responsive grid for section cards */}
-      <div className="grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3 @4xl:grid-cols-4 gap-4">
+
+      {/* Masonry layout for section cards using CSS columns */}
+      <div className="columns-1 @md:columns-2 @2xl:columns-3 @4xl:columns-4 gap-4 space-y-4">
         {/* Introduction */}
         <SectionCard title="Introduction" content={analysis.introduction} />
-        
+
         {/* Related Work */}
         <SectionCard title="Related Work" content={analysis.related_work} />
-        
+
         {/* Problem Statement / Research Questions */}
         <SectionCard title="Problem Statement / Research Questions" content={analysis.problem_statement} />
-        
+
         {/* Methodology */}
         <SectionCard title="Methodology" content={analysis.methodology} />
-        
+
         {/* Results */}
         <SectionCard title="Results" content={analysis.results} />
-        
+
         {/* Discussion */}
         <SectionCard title="Discussion" content={analysis.discussion} />
-        
+
         {/* Limitations */}
         <ListSectionCard title="Limitations" items={analysis.limitations} />
-        
+
         {/* Future Work */}
         <ListSectionCard title="Future Work" items={analysis.future_work} />
-        
+
         {/* Conclusion */}
         <SectionCard title="Conclusion" content={analysis.conclusion} />
       </div>

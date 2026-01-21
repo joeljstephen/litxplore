@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ReviewDisplay } from "@/components/ReviewDisplay";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
+import { titleCase } from "@/lib/utils";
 import { Trash2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,7 +256,7 @@ export default function HistoryPage() {
                 />
 
                 <CardHeader>
-                  <CardTitle className="line-clamp-2">{review.title}</CardTitle>
+                  <CardTitle className="line-clamp-2">{titleCase(review.title)}</CardTitle>
                   <CardDescription>
                     {isToday(new Date(review.created_at))
                       ? "Today"
@@ -266,7 +267,7 @@ export default function HistoryPage() {
                   <div className="space-y-3">
                     <h4 className="font-semibold text-primary">Topic</h4>
                     <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                      {review.topic}
+                      {titleCase(review.topic)}
                     </p>
                     <h4 className="font-semibold text-primary">Review</h4>
                     <div className="text-sm text-foreground prose-sm line-clamp-6">
@@ -285,7 +286,7 @@ export default function HistoryPage() {
           {selectedReview && (
             <>
               <DialogTitle className="text-2xl font-bold text-foreground">
-                {selectedReview.title}
+                {titleCase(selectedReview.title)}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground">
                 Created{" "}

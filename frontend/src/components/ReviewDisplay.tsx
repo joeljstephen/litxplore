@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, titleCase } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface ReviewDisplayProps {
@@ -146,7 +146,7 @@ export const ReviewDisplay = ({
         className="flex justify-between items-center mb-6"
       >
         <h1 className="text-3xl font-bold">
-          Literature Review: {topic || "Untitled"}
+          Literature Review: {topic ? titleCase(topic) : "Untitled"}
         </h1>
         {showDownload && (
           <DropdownMenu>

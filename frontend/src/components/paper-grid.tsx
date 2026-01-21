@@ -143,6 +143,26 @@ export function PaperGrid({
                   </p>
                 </CardContent>
                 <CardFooter className="flex flex-wrap justify-between items-center gap-2 pt-4 border-t border-border">
+                  {!enableSelection && (
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" size="sm" asChild>
+                        {(("link" in paper && paper.link) || paper.url) && (
+                          <Link
+                            href={
+                              ("link" in paper && paper.link) ||
+                              paper.url ||
+                              "#"
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View PDF
+                          </Link>
+                        )}
+                      </Button>
+                    </motion.div>
+                  )}
                   {enableSelection && (
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <Button
@@ -162,7 +182,7 @@ export function PaperGrid({
                       </Button>
                     </motion.div>
                   )}
-                  <div className="flex gap-2 ml-auto">
+                  {!enableSelection && (
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <Button variant="default" size="sm" asChild>
                         <Link href={`/papers/${paper.id}/analyze`}>
@@ -171,6 +191,8 @@ export function PaperGrid({
                         </Link>
                       </Button>
                     </motion.div>
+                  )}
+                  {enableSelection && (
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <Button variant="ghost" size="sm" asChild>
                         {(("link" in paper && paper.link) || paper.url) && (
@@ -189,7 +211,7 @@ export function PaperGrid({
                         )}
                       </Button>
                     </motion.div>
-                  </div>
+                  )}
                 </CardFooter>
               </Card>
             </motion.div>
