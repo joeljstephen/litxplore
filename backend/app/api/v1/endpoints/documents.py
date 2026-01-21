@@ -7,16 +7,41 @@ from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 class DocumentGenerateRequest(BaseModel):
-    content: str = Field(..., min_length=1, description="The content of the review")
-    citations: List[Paper] = Field(..., min_items=1, description="List of cited papers")
-    topic: str = Field(..., min_length=1, description="The review topic")
-    format: str = Field(..., pattern="^(pdf|latex)$", description="Output format (pdf or latex)")
+    content: str = Field(
+        ...,
+        min_length=1,
+        max_length=50000,
+        description="The content of the review (max 50,000 characters)"
+    )
+    citations: List[Paper] = Field(
+        ...,
+        min_length=1,
+        max_length=200,
+        description="List of cited papers (max 200 papers)"
+    )
+    topic: str = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="The review topic (max 500 characters)"
+    )
+    format: str = Field(
+        ...,
+        pattern="^(pdf|latex)$",
+        description="Output format (pdf or latex)"
+    )
 
     @validator('topic')
     def topic_must_not_be_empty(cls, v):
         if not v.strip():
             raise ValueError('Topic cannot be empty')
         return v.strip()
+    
+    @validator('content')
+    def content_must_not_be_empty(cls, v):
+        if not v.strip():
+            raise ValueError('Content cannot be empty')
+        return v
 
     class Config:
         json_schema_extra = {

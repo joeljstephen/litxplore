@@ -22,6 +22,7 @@ pyjwt>=2.8.0
 requests
 python-jose[cryptography]>=3.3.0
 cryptography>=39.0.1
+svix>=1.4.0
 
 # AI and LangChain
 openai

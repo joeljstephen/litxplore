@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     CLERK_PUBLISHABLE_KEY: str
     CLERK_JWKS_URL: str
     JWT_ALGORITHM: str
+    CLERK_WEBHOOK_SECRET: Optional[str] = None  # For webhook signature verification
     
     class Config:
         env_file = ".env"

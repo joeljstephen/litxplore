@@ -1,39 +1,90 @@
 from typing import Dict, Any
-from fastapi import APIRouter, Depends, Header
+import json
+import logging
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.orm import Session
+from svix.webhooks import Webhook, WebhookVerificationError
 from app.db.database import get_db
 from app.models.user import User
 from app.utils.user_utils import get_or_create_user
-from app.utils.error_utils import raise_unauthorized, raise_internal_error, ErrorCode
+from app.utils.error_utils import raise_unauthorized, raise_internal_error, raise_validation_error, ErrorCode
 from app.core.auth import get_current_user
+from app.core.config import get_settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+settings = get_settings()
 
-def verify_clerk_webhook_secret(svix_id: str = Header(None), svix_timestamp: str = Header(None), svix_signature: str = Header(None)):
+
+async def verify_clerk_webhook(
+    request: Request,
+    svix_id: str = Header(None, alias="svix-id"),
+    svix_timestamp: str = Header(None, alias="svix-timestamp"),
+    svix_signature: str = Header(None, alias="svix-signature"),
+) -> Dict[str, Any]:
     """
-    Verify the Clerk webhook signature
-    Note: For full implementation, you should use the svix library to verify the signature
+    Verify the Clerk webhook signature using Svix library.
+    Returns the verified payload if signature is valid.
     """
     if not all([svix_id, svix_timestamp, svix_signature]):
         raise_unauthorized(
             message="Missing webhook signature headers",
             error_code=ErrorCode.UNAUTHORIZED
         )
-    # TODO: Implement proper signature verification using the svix library
-    return True
+    
+    # Check if webhook secret is configured
+    if not settings.CLERK_WEBHOOK_SECRET:
+        logger.warning("CLERK_WEBHOOK_SECRET not configured - webhook verification disabled")
+        # Fall back to just parsing the body without verification
+        # This allows development without webhook secret but logs a warning
+        body = await request.body()
+        try:
+            return json.loads(body)
+        except json.JSONDecodeError:
+            raise_validation_error(
+                message="Invalid JSON payload",
+                error_code=ErrorCode.VALIDATION_ERROR
+            )
+    
+    # Get the raw request body for signature verification
+    body = await request.body()
+    
+    headers = {
+        "svix-id": svix_id,
+        "svix-timestamp": svix_timestamp,
+        "svix-signature": svix_signature,
+    }
+    
+    try:
+        wh = Webhook(settings.CLERK_WEBHOOK_SECRET)
+        verified_payload = wh.verify(body, headers)
+        return verified_payload
+    except WebhookVerificationError as e:
+        logger.warning(f"Webhook signature verification failed: {e}")
+        raise_unauthorized(
+            message="Invalid webhook signature",
+            error_code=ErrorCode.UNAUTHORIZED
+        )
+    except Exception as e:
+        logger.error(f"Webhook verification error: {e}")
+        raise_internal_error(
+            message="Webhook verification failed",
+            error_code=ErrorCode.INTERNAL_ERROR
+        )
+
 
 @router.post("/webhook/clerk")
 async def clerk_webhook(
-    payload: Dict[Any, Any],
+    verified_payload: Dict[str, Any] = Depends(verify_clerk_webhook),
     db: Session = Depends(get_db),
-    _: bool = Depends(verify_clerk_webhook_secret)
 ):
     """
-    Handle Clerk webhook events for user synchronization
+    Handle Clerk webhook events for user synchronization.
+    The payload is verified using Svix signature verification.
     """
     try:
-        event_type = payload.get("type")
-        data = payload.get("data", {})
+        event_type = verified_payload.get("type")
+        data = verified_payload.get("data", {})
         
         if event_type in ["user.created", "user.updated"]:
             user = get_or_create_user(

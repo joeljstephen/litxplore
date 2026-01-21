@@ -7,6 +7,7 @@ from ....services.analysis_service import AnalysisService
 from ....core.auth import get_current_user
 from ....models.user import User
 from ....utils.error_utils import raise_validation_error, raise_not_found, raise_internal_error, ErrorCode
+from ....utils.input_validation import is_valid_paper_id
 
 router = APIRouter()
 analysis_service = AnalysisService()
@@ -38,6 +39,13 @@ async def analyze_paper(
         if not paper_id:
             raise_validation_error(
                 message="Paper ID is required",
+                error_code=ErrorCode.VALIDATION_ERROR
+            )
+        
+        # Validate paper_id format to prevent injection attacks
+        if not is_valid_paper_id(paper_id):
+            raise_validation_error(
+                message="Invalid paper ID format",
                 error_code=ErrorCode.VALIDATION_ERROR
             )
         
@@ -78,6 +86,13 @@ async def get_paper_analysis(
         if not paper_id:
             raise_validation_error(
                 message="Paper ID is required",
+                error_code=ErrorCode.VALIDATION_ERROR
+            )
+        
+        # Validate paper_id format to prevent injection attacks
+        if not is_valid_paper_id(paper_id):
+            raise_validation_error(
+                message="Invalid paper ID format",
                 error_code=ErrorCode.VALIDATION_ERROR
             )
         
@@ -126,6 +141,13 @@ async def compute_in_depth(
         if not paper_id:
             raise_validation_error(
                 message="Paper ID is required",
+                error_code=ErrorCode.VALIDATION_ERROR
+            )
+        
+        # Validate paper_id format to prevent injection attacks
+        if not is_valid_paper_id(paper_id):
+            raise_validation_error(
+                message="Invalid paper ID format",
                 error_code=ErrorCode.VALIDATION_ERROR
             )
         

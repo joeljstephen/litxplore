@@ -8,6 +8,7 @@ from ....services.paper_chat import PaperChatService
 from ....core.auth import get_current_user
 from ....models.user import User
 from ....utils.error_utils import raise_validation_error, raise_not_found, raise_internal_error, ErrorCode
+from ....utils.input_validation import is_valid_paper_id, MAX_CHAT_MESSAGE_LENGTH
 
 router = APIRouter()
 chat_service = PaperChatService()
@@ -18,7 +19,12 @@ logger = logging.getLogger(__name__)
 @router.post("/{paper_id}/chat", operation_id="chatWithPaper")
 async def chat_with_paper(
     paper_id: str,
-    message: str = Query(..., description="The user's question or message"),
+    message: str = Query(
+        ...,
+        description="The user's question or message",
+        min_length=1,
+        max_length=MAX_CHAT_MESSAGE_LENGTH
+    ),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -28,7 +34,7 @@ async def chat_with_paper(
     
     Args:
         paper_id: The ID of the paper to chat about
-        message: The user's question or message
+        message: The user's question or message (max 4000 characters)
         current_user: Authenticated user
     
     Returns:
@@ -38,6 +44,13 @@ async def chat_with_paper(
         if not paper_id:
             raise_validation_error(
                 message="Paper ID is required",
+                error_code=ErrorCode.VALIDATION_ERROR
+            )
+        
+        # Validate paper_id format to prevent injection attacks
+        if not is_valid_paper_id(paper_id):
+            raise_validation_error(
+                message="Invalid paper ID format",
                 error_code=ErrorCode.VALIDATION_ERROR
             )
         

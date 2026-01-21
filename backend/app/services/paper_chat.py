@@ -2,6 +2,7 @@ import os
 import tempfile
 import logging
 from typing import AsyncGenerator, Dict, Any
+from urllib.parse import urlparse
 import requests
 import arxiv
 
@@ -12,6 +13,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from ..core.config import get_settings
+from ..utils.input_validation import extract_upload_hash, is_valid_arxiv_id
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -50,14 +52,22 @@ class PaperChatService:
         temp_pdf_path = None
         
         try:
-            # Fetch paper
+            # Fetch paper with path traversal protection
             if paper_id.startswith("upload_"):
-                content_hash = paper_id.replace("upload_", "")
+                # Validate upload ID format to prevent path traversal
+                content_hash = extract_upload_hash(paper_id)
+                if not content_hash:
+                    yield {
+                        "content": "Error: Invalid uploaded paper ID format",
+                        "sources": []
+                    }
+                    return
+                
                 pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
                 
                 if not os.path.exists(pdf_path):
                     yield {
-                        "content": f"Error: Uploaded PDF file not found",
+                        "content": "Error: Uploaded PDF file not found",
                         "sources": []
                     }
                     return
@@ -67,13 +77,32 @@ class PaperChatService:
                         tmp.write(f.read())
                     temp_pdf_path = tmp.name
             else:
+                # Validate arXiv ID format
+                if not is_valid_arxiv_id(paper_id):
+                    yield {
+                        "content": "Error: Invalid paper ID format",
+                        "sources": []
+                    }
+                    return
+                
                 # Fetch from arXiv
                 try:
                     client = arxiv.Client()
                     search = arxiv.Search(id_list=[paper_id])
                     arxiv_paper = next(client.results(search))
                     
-                    response = requests.get(arxiv_paper.pdf_url, timeout=30)
+                    # SSRF protection: validate the PDF URL host
+                    pdf_url = arxiv_paper.pdf_url
+                    parsed_url = urlparse(pdf_url)
+                    allowed_hosts = {"arxiv.org", "export.arxiv.org", "www.arxiv.org"}
+                    if parsed_url.hostname not in allowed_hosts:
+                        yield {
+                            "content": "Error: Invalid PDF source",
+                            "sources": []
+                        }
+                        return
+                    
+                    response = requests.get(pdf_url, timeout=30)
                     response.raise_for_status()
                     
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
@@ -81,7 +110,7 @@ class PaperChatService:
                         temp_pdf_path = tmp.name
                 except StopIteration:
                     yield {
-                        "content": f"Error: Paper not found on arXiv",
+                        "content": "Error: Paper not found on arXiv",
                         "sources": []
                     }
                     return

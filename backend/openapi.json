@@ -63,9 +63,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Review Data"
+                "$ref": "#/components/schemas/SaveReviewRequest"
               }
             }
           },
@@ -1086,7 +1084,7 @@
                 "Author 2"
               ],
               "id": "paper_id",
-              "published": "2026-01-21T07:39:34.731144",
+              "published": "2026-01-21T09:37:55.797132",
               "summary": "Paper summary",
               "title": "Paper Title",
               "url": "http://example.com/paper.pdf"
@@ -1342,6 +1340,52 @@
           "max_papers": 10,
           "topic": "Recent advances in transformer architectures for natural language processing"
         }
+      },
+      "SaveReviewRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Title of the review",
+            "default": "Untitled Review"
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Topic",
+            "description": "Research topic of the review"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Content",
+            "description": "The review content"
+          },
+          "citations": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citations",
+            "description": "Citations in JSON format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic",
+          "content"
+        ],
+        "title": "SaveReviewRequest",
+        "description": "Schema for saving a review with proper input validation."
       },
       "TaskResponse": {
         "properties": {

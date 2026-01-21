@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from pydantic import BaseModel, Field, field_validator
 import os
 import logging
 from app.models.review import ReviewRequest, ReviewResponse, Review
@@ -12,7 +13,49 @@ from app.core.auth import get_current_user
 from app.models.user import User
 from app.db.database import get_db
 from app.utils.error_utils import raise_validation_error, raise_not_found, raise_internal_error, ErrorCode
+from app.utils.input_validation import extract_upload_hash
 from sqlalchemy.orm import Session
+
+
+class SaveReviewRequest(BaseModel):
+    """Schema for saving a review with proper input validation."""
+    title: str = Field(
+        default="Untitled Review",
+        min_length=1,
+        max_length=255,
+        description="Title of the review"
+    )
+    topic: str = Field(
+        ...,
+        min_length=3,
+        max_length=500,
+        description="Research topic of the review"
+    )
+    content: str = Field(
+        ...,
+        min_length=1,
+        max_length=100000,
+        description="The review content"
+    )
+    citations: Optional[str] = Field(
+        default=None,
+        max_length=200000,
+        description="Citations in JSON format"
+    )
+    
+    @field_validator('title', 'topic', 'content')
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        if v:
+            return v.strip()
+        return v
+    
+    @field_validator('topic')
+    @classmethod
+    def topic_not_empty_after_strip(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('Topic cannot be empty or whitespace only')
+        return v.strip()
 
 settings = get_settings()
 router = APIRouter()
@@ -68,18 +111,17 @@ Save a literature review
 """
 @router.post("/save", operation_id="saveReview")
 async def save_review(
-    request: Request,
-    review_data: Dict[str, Any],
+    review_data: SaveReviewRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     try:
         new_review = Review(
             user_id=current_user.id,
-            title=review_data.get("title", "Untitled Review"),
-            topic=review_data["topic"],
-            content=review_data["content"],
-            citations=review_data.get("citations")
+            title=review_data.title,
+            topic=review_data.topic,
+            content=review_data.content,
+            citations=review_data.citations
         )
         
         db.add(new_review)
@@ -153,18 +195,22 @@ async def cleanup_uploaded_pdfs(paper_ids: List[str]):
     """Delete uploaded PDF files to free up space.
     This function is intentionally not dependent on user authentication to allow
     cleanup even when tokens expire during long-running operations.
+    
+    Uses path traversal protection to ensure only valid upload files are deleted.
     """
     try:
         upload_dir = "uploads"
         for paper_id in paper_ids:
-            if paper_id.startswith('upload_'):
-                content_hash = paper_id.replace('upload_', '')
-                pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
-                if os.path.exists(pdf_path):
-                    os.remove(pdf_path)
-                    print(f"Deleted PDF file: {pdf_path}")
+            # Validate upload ID format to prevent path traversal attacks
+            content_hash = extract_upload_hash(paper_id)
+            if not content_hash:
+                continue
+            
+            pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+                logging.info(f"Deleted PDF file: {pdf_path}")
     except Exception as e:
         # Log the error but don't fail the request
-        print(f"Error cleaning up PDF files: {str(e)}")
         logging.error(f"Error cleaning up PDF files: {str(e)}")
     return {"cleanup_status": "completed"}
