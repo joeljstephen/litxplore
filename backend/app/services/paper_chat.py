@@ -10,8 +10,8 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
+from langchain_community.chains import ConversationalRetrievalChain
+from langchain_core.prompts import PromptTemplate
 from ..core.config import get_settings
 from ..utils.input_validation import extract_upload_hash, is_valid_arxiv_id
 

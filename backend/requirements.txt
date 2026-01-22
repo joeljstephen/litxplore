@@ -28,6 +28,7 @@ svix>=1.4.0
 openai
 google-generativeai
 langchain>=0.0.267
+langchain-core>=0.1.0
 langserve>=0.0.30
 # Specify minimal versions to reduce dependencies
 langchain-community>=0.0.16
