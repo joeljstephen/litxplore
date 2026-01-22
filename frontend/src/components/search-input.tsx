@@ -119,7 +119,7 @@ export function SearchInput({
         >
           <Button
             variant="outline"
-            className="w-full justify-start transition-all duration-200 shadow-sm h-11"
+            className="w-full justify-start transition-all duration-200 shadow-sm h-11 hover:bg-primary/10 hover:text-primary hover:border-primary/50"
           >
             <Search className="mr-2 h-4 w-4 text-primary" />
             <span className="text-muted-foreground">
@@ -172,8 +172,8 @@ export function SearchInput({
                     className={cn(
                       "flex flex-col  items-start gap-1 p-3 m-1 transition-colors duration-200 cursor-pointer rounded-lg border border-transparent",
                       selectedPapers.has(paper.id)
-                        ? "bg-primary/10 border-primary/20"
-                        : "hover:bg-accent hover:border-border"
+                        ? "bg-primary/10 border-primary/20 text-foreground"
+                        : "hover:bg-primary/10 hover:border-primary/20 hover:text-primary"
                     )}
                     value={paper.title}
                   >
