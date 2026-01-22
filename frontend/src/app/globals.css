@@ -123,3 +123,157 @@
     @apply bg-muted border border-border;
   }
 }
+
+/* Clerk component styling overrides - matching homepage background */
+.cl-userProfile-root,
+.cl-userProfile-rootBox,
+.cl-modalContent,
+.cl-cardBox {
+  background-color: hsl(180, 2%, 10%) !important;
+}
+
+.cl-pageScrollBox,
+.cl-scrollBox {
+  background-color: hsl(180, 2%, 10%) !important;
+}
+
+.cl-navbar {
+  background-color: hsl(180, 2%, 10%) !important;
+  border-right: 1px solid hsl(207, 9%, 25%) !important;
+}
+
+.cl-navbarButton {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-navbarButton:hover {
+  color: hsl(38, 92%, 50%) !important;
+  background-color: hsl(220, 9%, 20%) !important;
+}
+
+.cl-navbarButtonText {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-headerTitle,
+.cl-headerSubtitle,
+.cl-sectionTitle,
+.cl-sectionSubtitle {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-formFieldLabel,
+.cl-label {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-formFieldInput,
+.cl-input,
+.cl-userProfileInput {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(0, 0%, 88%) !important;
+  border: 1px solid hsl(207, 9%, 25%) !important;
+}
+
+.cl-formFieldInput:focus,
+.cl-input:focus {
+  border-color: hsl(38, 92%, 50%) !important;
+  outline: none !important;
+}
+
+.cl-button,
+.cl-userProfileButton {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-button:hover {
+  background-color: hsl(220, 9%, 25%) !important;
+  color: hsl(38, 92%, 50%) !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: hsl(38, 92%, 50%) !important;
+  color: hsl(0, 0%, 10%) !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: hsl(45, 93%, 58%) !important;
+}
+
+.cl-dividerLine {
+  border-color: hsl(207, 9%, 25%) !important;
+}
+
+.cl-dividerText {
+  color: hsl(0, 0%, 63%) !important;
+}
+
+.cl-badge {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(0, 0%, 63%) !important;
+}
+
+.cl-link,
+.cl-userProfileLink {
+  color: hsl(38, 92%, 50%) !important;
+}
+
+.cl-link:hover,
+.cl-userProfileLink:hover {
+  color: hsl(45, 93%, 58%) !important;
+}
+
+.cl-identityPreviewText,
+.cl-identityPreviewTextSecondary,
+.cl-userButtonPopoverActionButtonText {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-identityPreviewTextSecondary {
+  color: hsl(0, 0%, 63%) !important;
+}
+
+.cl-userButtonPopoverActionButton {
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(38, 92%, 50%) !important;
+}
+
+.cl-userButtonPopoverActions {
+  background-color: hsl(180, 2%, 10%) !important;
+}
+
+.cl-connectedAccount {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(0, 0%, 88%) !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: hsl(220, 9%, 20%) !important;
+  color: hsl(0, 0%, 88%) !important;
+  border: 1px solid hsl(207, 9%, 25%) !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: hsl(220, 9%, 25%) !important;
+}
+
+/* Remove background circle from UserButton */
+.cl-userButtonBox,
+.cl-userButtonTrigger {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.cl-userButtonTrigger:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.cl-userButtonAvatarBox {
+  background: transparent !important;
+}

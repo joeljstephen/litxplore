@@ -54,7 +54,159 @@ export default function RootLayout({
             baseTheme: undefined,
             variables: {
               colorPrimary: "#f59e0b",
-              colorBackground: "#09090b",
+              colorBackground: "hsl(180, 2%, 10%)",
+              colorInputText: "#ffffff",
+              colorText: "#ffffff",
+            },
+            elements: {
+              card: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              navbar: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              navbarButton: {
+                color: "#e0e0e0",
+              },
+              navbarButtonText: {
+                color: "#e0e0e0",
+              },
+              navbarButtonActive: {
+                color: "#f59e0b",
+              },
+              navbarButtonHover: {
+                color: "#f59e0b",
+              },
+              formButtonPrimary: {
+                backgroundColor: "#f59e0b",
+                color: "#1a1a1a",
+              },
+              footer: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              headerTitle: {
+                color: "#e0e0e0",
+              },
+              headerSubtitle: {
+                color: "#a0a0a0",
+              },
+              socialButtonsBlockButton: {
+                backgroundColor: "#282a2e",
+                color: "#e0e0e0",
+              },
+              formFieldLabel: {
+                color: "#e0e0e0",
+              },
+              formFieldInput: {
+                backgroundColor: "#282a2e",
+                color: "#e0e0e0",
+              },
+              dividerLine: {
+                borderColor: "#3a3f44",
+              },
+              dividerText: {
+                color: "#a0a0a0",
+              },
+              identityPreview: {
+                color: "#e0e0e0",
+              },
+              identityPreviewText: {
+                color: "#e0e0e0",
+              },
+              identityPreviewTextSecondary: {
+                color: "#a0a0a0",
+              },
+              userButtonPopoverActions: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+              },
+              userButtonPopoverActionButton: {
+                color: "#e0e0e0",
+              },
+              userButtonPopoverActionButtonText: {
+                color: "#e0e0e0",
+              },
+              userButtonPopoverActionButtonIcon: {
+                color: "#e0e0e0",
+              },
+              userButtonPopoverActionButtonHover: {
+                backgroundColor: "#282a2e",
+                color: "#f59e0b",
+              },
+              // User Profile modal styles - matching homepage background
+              modal: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              modalContent: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+              },
+              modalBackdrop: {
+                backgroundColor: "rgba(0, 0, 0, 0.7)",
+              },
+              userProfileRootBox: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+              },
+              userProfileNavbar: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              userProfilePageScrollBox: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+                color: "#e0e0e0",
+              },
+              cardBox: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+              },
+              scrollBox: {
+                backgroundColor: "hsl(180, 2%, 10%)",
+              },
+              userProfileSectionTitle: {
+                color: "#e0e0e0",
+              },
+              userProfileSectionSubtitle: {
+                color: "#a0a0a0",
+              },
+              userProfileForm: {
+                color: "#e0e0e0",
+              },
+              userProfileButton: {
+                backgroundColor: "#282a2e",
+                color: "#e0e0e0",
+              },
+              userProfileButtonHover: {
+                backgroundColor: "#3a3f44",
+                color: "#f59e0b",
+              },
+              userProfileInput: {
+                backgroundColor: "#282a2e",
+                color: "#e0e0e0",
+              },
+              userProfileLabel: {
+                color: "#e0e0e0",
+              },
+              userProfileLink: {
+                color: "#f59e0b",
+              },
+              userProfileLinkHover: {
+                color: "#fbbf24",
+              },
+              userProfileDivider: {
+                borderColor: "#3a3f44",
+              },
+              userProfileBadge: {
+                backgroundColor: "#282a2e",
+                color: "#a0a0a0",
+              },
+              userProfileConnectedAccount: {
+                backgroundColor: "#282a2e",
+                color: "#e0e0e0",
+              },
+              userProfileConnectedAccountText: {
+                color: "#e0e0e0",
+              },
             },
           }}
         >

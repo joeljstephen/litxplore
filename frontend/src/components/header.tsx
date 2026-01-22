@@ -56,6 +56,9 @@ function NavContent() {
             appearance={{
               elements: {
                 userButtonAvatarBox: "h-9 w-9 ml-2",
+                userButtonBox: "bg-transparent",
+                userButtonTrigger: "bg-transparent hover:bg-transparent",
+                userButtonPopoverCard: "bg-background",
               },
             }}
           />
@@ -124,7 +127,9 @@ function NavContent() {
                     appearance={{
                       elements: {
                         userButtonAvatarBox: "h-10 w-10",
-                        userButtonTrigger: "hover:opacity-80 transition-opacity",
+                        userButtonBox: "bg-transparent",
+                        userButtonTrigger: "bg-transparent hover:bg-transparent hover:opacity-80 transition-opacity",
+                        userButtonPopoverCard: "bg-background",
                       },
                     }}
                   />
