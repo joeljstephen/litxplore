@@ -188,29 +188,5 @@ async def delete_review(
     
     db.delete(review)
     db.commit()
-    
-    return {"message": "Review deleted successfully"}
 
-async def cleanup_uploaded_pdfs(paper_ids: List[str]):
-    """Delete uploaded PDF files to free up space.
-    This function is intentionally not dependent on user authentication to allow
-    cleanup even when tokens expire during long-running operations.
-    
-    Uses path traversal protection to ensure only valid upload files are deleted.
-    """
-    try:
-        upload_dir = "uploads"
-        for paper_id in paper_ids:
-            # Validate upload ID format to prevent path traversal attacks
-            content_hash = extract_upload_hash(paper_id)
-            if not content_hash:
-                continue
-            
-            pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
-            if os.path.exists(pdf_path):
-                os.remove(pdf_path)
-                logging.info(f"Deleted PDF file: {pdf_path}")
-    except Exception as e:
-        # Log the error but don't fail the request
-        logging.error(f"Error cleaning up PDF files: {str(e)}")
-    return {"cleanup_status": "completed"}
+    return {"message": "Review deleted successfully"}

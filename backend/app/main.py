@@ -91,7 +91,7 @@ class BackgroundTaskMiddleware(BaseHTTPMiddleware):
             try:
                 if task['task'] == 'cleanup_pdfs':
                     # Import here to avoid circular imports
-                    from app.api.v1.endpoints.review import cleanup_uploaded_pdfs
+                    from app.utils.file_utils import cleanup_uploaded_pdfs
                     await cleanup_uploaded_pdfs(task['paper_ids'])
                     logging.info(f"Background task: cleaned up {len(task['paper_ids'])} PDFs")
             except Exception as e:

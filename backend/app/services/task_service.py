@@ -11,7 +11,7 @@ from app.models.paper import Paper
 from app.services.paper_service import PaperService
 from app.services.langchain_service import LangChainService
 from app.db.database import SessionLocal
-from app.api.v1.endpoints.review import cleanup_uploaded_pdfs
+from app.utils.file_utils import cleanup_uploaded_pdfs
 import logging
 
 logger = logging.getLogger(__name__)
