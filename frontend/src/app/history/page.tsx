@@ -89,9 +89,9 @@ export default function HistoryPage() {
   const [parsedCitations, setParsedCitations] = useState<Paper[]>([]);
   const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
 
-  // React Query hooks
+  // React Query hooks (Orval v8 wraps in { data, status })
   const {
-    data: reviewsData = [],
+    data: reviewsData,
     isLoading: loading,
     error,
   } = useGetReviewHistory({
@@ -101,7 +101,10 @@ export default function HistoryPage() {
     },
   });
 
-  const reviews = reviewsData as unknown as Review[];
+  const reviews =
+    reviewsData?.status === 200
+      ? (reviewsData.data as unknown as Review[])
+      : [];
   const deleteReview = useDeleteReview({
     mutation: {
       onSuccess: () => {

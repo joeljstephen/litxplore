@@ -2,6 +2,9 @@ import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Type to handle both RequestInit and AxiosRequestConfig
+type RequestOptions = AxiosRequestConfig | RequestInit;
+
 // Create the base Axios instance
 export const axiosInstance = Axios.create({
   baseURL: API_BASE_URL,
@@ -105,23 +108,52 @@ axiosInstance.interceptors.response.use(
 
 export { ApiError };
 
-// Custom instance for Orval
+// Custom instance for Orval v8
+// Orval v8 expects responses in format: { data, status, headers }
 export const customInstance = <T>(
-  config: AxiosRequestConfig,
-  options?: AxiosRequestConfig
+  config: AxiosRequestConfig | string,
+  options?: any
 ): Promise<T> => {
   const source = Axios.CancelToken.source();
 
+  // Handle both string URL and config object
+  const axiosConfig: AxiosRequestConfig =
+    typeof config === "string" ? { url: config } : config;
+
+  // Convert RequestInit to AxiosRequestConfig if needed
+  let axiosOptions: AxiosRequestConfig = {};
+  if (options) {
+    // Check if it's RequestInit (has 'body' property)
+    if (options.body && !options.data) {
+      axiosOptions = {
+        headers: options.headers,
+        // Convert body to data for Axios
+        data: options.body,
+        // Note: RequestInit 'method' is compatible with Axios 'method'
+        method: options.method,
+      };
+    } else {
+      axiosOptions = options;
+    }
+  }
+
   // Check if this is a request that should return a blob
   // (e.g., document generation endpoints)
-  const shouldReturnBlob = config.url?.includes("/documents/generate");
+  const shouldReturnBlob = axiosConfig.url?.includes("/documents/generate");
 
   const promise = axiosInstance({
-    ...config,
-    ...options,
-    responseType: shouldReturnBlob ? "blob" : options?.responseType,
+    ...axiosConfig,
+    ...axiosOptions,
+    responseType: shouldReturnBlob ? "blob" : axiosOptions?.responseType,
     cancelToken: source.token,
-  }).then(({ data }) => data);
+  }).then((response) => {
+    // Return the response in Orval v8 expected format: { data, status, headers }
+    return {
+      data: response.data,
+      status: response.status,
+      headers: response.headers,
+    } as T;
+  });
 
   // @ts-expect-error - Adding cancel method to promise
   promise.cancel = () => {

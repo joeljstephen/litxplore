@@ -26,13 +26,15 @@ function ReviewPageContent() {
   const [selectedPapers, setSelectedPapers] = useState<Set<string>>(new Set());
   const [displayedPapers, setDisplayedPapers] = useState<Paper[]>([]);
 
-  // React Query hooks
+  // React Query hooks (Orval v8 wraps in { data, status })
   const generateReview = useGenerateReview({
     mutation: {
       onSuccess: (taskResponse) => {
         console.log("Review generation task started!", taskResponse);
-        // Navigate to the generated review page with task ID
-        router.push(`/generated-review?taskId=${taskResponse.id}`);
+        // Navigate to the generated review page with task ID (check for success response)
+        if (taskResponse.status === 200) {
+          router.push(`/generated-review?taskId=${taskResponse.data.id}`);
+        }
       },
       onError: (error) => {
         console.error("Failed to start review generation:", error);
@@ -61,10 +63,10 @@ function ReviewPageContent() {
       }
     );
 
-  // Merge search results with displayed papers
+  // Merge search results with displayed papers (Orval v8 wraps in { data, status })
   useEffect(() => {
-    if (suggestedPapers) {
-      setDisplayedPapers(suggestedPapers);
+    if (suggestedPapers?.status === 200) {
+      setDisplayedPapers(suggestedPapers.data);
     }
   }, [suggestedPapers]);
 

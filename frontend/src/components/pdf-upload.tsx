@@ -12,11 +12,14 @@ interface PDFUploadProps {
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
 export function PDFUpload({ onPaperAdd, currentPaperCount }: PDFUploadProps) {
+  // Orval v8 wraps in { data, status }
   const uploadPaper = useUploadPaper({
     mutation: {
-      onSuccess: (paper) => {
-        onPaperAdd(paper);
-        toast.success("PDF uploaded successfully");
+      onSuccess: (response) => {
+        if (response.status === 200) {
+          onPaperAdd(response.data);
+          toast.success("PDF uploaded successfully");
+        }
       },
       onError: (error) => {
         const errorMessage =

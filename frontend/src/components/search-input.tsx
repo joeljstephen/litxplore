@@ -58,6 +58,10 @@ export function SearchInput({
       },
     }
   );
+
+  // Extract the data from the API response (Orval v8 wraps in { data, status })
+  const results = searchResults?.status === 200 ? searchResults.data : [];
+
   // Log errors if they occur
   useEffect(() => {
     if (isError && error) {
@@ -141,7 +145,7 @@ export function SearchInput({
                 <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2 text-primary" />
                 <span className="text-sm">Searching papers...</span>
               </CommandEmpty>
-            ) : !searchResults || searchResults.length === 0 ? (
+            ) : !results || results.length === 0 ? (
               <CommandEmpty className="py-8 text-muted-foreground flex flex-col items-center justify-center">
                 {search.length <= 2 ? (
                   <>
@@ -161,7 +165,7 @@ export function SearchInput({
               </CommandEmpty>
             ) : (
               <CommandGroup className="py-2">
-                {searchResults.map((paper) => (
+                {results.map((paper) => (
                   <CommandItem
                     key={paper.id}
                     onSelect={() => handlePaperSelect(paper)}

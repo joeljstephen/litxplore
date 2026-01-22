@@ -6,12 +6,13 @@ import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Search, BookOpen, Clock, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function NavContent() {
   const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const userButtonRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
     {
@@ -121,7 +122,22 @@ function NavContent() {
           ) : isSignedIn ? (
             <div className="flex flex-col space-y-4">
               {/* User Profile Section */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
+              <div 
+                ref={userButtonRef}
+                className="flex items-center justify-between p-3 rounded-lg bg-card border border-border cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={(e) => {
+                  // Don't trigger if clicking directly on the UserButton
+                  if ((e.target as HTMLElement).closest('.cl-userButtonTrigger')) {
+                    return;
+                  }
+                  
+                  // Find and click the UserButton trigger button
+                  const userButtonTrigger = userButtonRef.current?.querySelector('button') as HTMLButtonElement;
+                  if (userButtonTrigger) {
+                    userButtonTrigger.click();
+                  }
+                }}
+              >
                 <div className="flex items-center space-x-3">
                   <UserButton
                     appearance={{

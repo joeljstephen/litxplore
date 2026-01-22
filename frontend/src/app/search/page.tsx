@@ -34,8 +34,9 @@ function SearchPageContent() {
     }
   );
 
-  // Combine search results with uploaded papers
-  const allPapers = [...uploadedPapers, ...(papers || [])];
+  // Combine search results with uploaded papers (Orval v8 wraps in { data, status })
+  const papersData = papers?.status === 200 ? papers.data : [];
+  const allPapers = [...uploadedPapers, ...papersData];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

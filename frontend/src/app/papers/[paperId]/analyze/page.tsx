@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  ExternalLink,
 } from "lucide-react";
 
 const STORAGE_KEY = "analyzer-pdf-visible";
@@ -133,7 +134,20 @@ export default function PaperAnalyzerPage() {
             {analysis?.paper.year && ` • ${analysis.paper.year}`}
           </p>
         </div>
-        {!isMobile && (
+        {isMobile ? (
+          // Mobile: Show "View PDF" button that opens in new tab
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(analysis?.paper.url, "_blank")}
+            className="gap-2 flex-shrink-0"
+            title="View PDF in new tab"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>View PDF</span>
+          </Button>
+        ) : (
+          // Desktop: Show toggle button
           <Button
             variant="outline"
             size="sm"
@@ -334,19 +348,9 @@ export default function PaperAnalyzerPage() {
   return (
     <div className="h-full w-full flex flex-col bg-background">
       {isMobile ? (
-        // Mobile layout - stacked with toggle
+        // Mobile layout - only show analysis content, no PDF viewer
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-          {showPdf && (
-            <div className="h-[40%] border-b overflow-hidden flex-shrink-0">
-              <PDFViewer url={analysis.paper.url} />
-            </div>
-          )}
-          <div
-            className={cn(
-              "flex-1 overflow-hidden",
-              showPdf ? "h-[60%]" : "h-full"
-            )}
-          >
+          <div className="flex-1 overflow-hidden h-full">
             {renderAnalysisContent()}
           </div>
         </div>

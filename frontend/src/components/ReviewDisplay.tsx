@@ -33,11 +33,14 @@ export const ReviewDisplay = ({
   showDownload = true,
   isDialog = false, // Add this prop
 }: ReviewDisplayProps) => {
+  // Orval v8 wraps in { data, status } - for documents, data is a Blob
   const generateDocument = useGenerateDocument({
     mutation: {
-      onSuccess: (data: unknown) => {
+      onSuccess: (response: unknown) => {
         // The API returns a Blob even though TypeScript thinks it's void
-        const receivedData = data as any;
+        // With Orval v8, the blob is in response.data
+        const responseData = response as { data: unknown; status: number };
+        const receivedData = responseData?.data ?? response;
 
         let blob: Blob;
 
@@ -51,7 +54,7 @@ export const ReviewDisplay = ({
           blob = receivedData as Blob;
         } else if (receivedData) {
           // If it's not a Blob, create one from the data
-          blob = new Blob([receivedData], {
+          blob = new Blob([receivedData as BlobPart], {
             type:
               generateDocument.variables?.data.format === "pdf"
                 ? "application/pdf"
@@ -137,7 +140,7 @@ export const ReviewDisplay = ({
       initial="hidden"
       animate="show"
       className={cn(
-        "container mx-auto py-8 flex flex-col",
+        "container mx-auto px-4 py-8 flex flex-col",
         !isDialog && "min-h-[calc(100vh-4rem)]" // Only apply min-height when not in dialog
       )}
     >

@@ -50,7 +50,7 @@ export default function GeneratedReviewPage() {
     },
   });
 
-  // Poll the task status
+  // Poll the task status (Orval v8 wraps in { data, status })
   const {
     data: taskData,
     isLoading,
@@ -60,20 +60,29 @@ export default function GeneratedReviewPage() {
     query: {
       enabled: !!taskId,
       refetchInterval: (query) => {
-        const status = query.state.data?.status;
-        return status === "running" || status === "pending" ? 2000 : false;
+        const response = query.state.data;
+        // Check if it's a success response (status 200) with TaskResponse
+        if (response?.status === 200 && "status" in response.data) {
+          const taskStatus = response.data.status;
+          return taskStatus === "running" || taskStatus === "pending"
+            ? 2000
+            : false;
+        }
+        return false;
       },
       queryKey: getGetTaskStatusQueryKey(taskId || ""),
     },
   });
 
-  // Derived state from task data
-  const isCompleted = taskData?.status === "completed";
-  const isFailed = taskData?.status === "failed";
-  const isRunning = taskData?.status === "running";
-  const isPending = taskData?.status === "pending";
-  const errorMessage = taskData?.error_message;
-  const result = taskData?.result_data;
+  // Derived state from task data (Orval v8 wraps in { data, status })
+  // Check if it's a success response (status 200)
+  const task = taskData?.status === 200 ? taskData.data : undefined;
+  const isCompleted = task?.status === "completed";
+  const isFailed = task?.status === "failed";
+  const isRunning = task?.status === "running";
+  const isPending = task?.status === "pending";
+  const errorMessage = task?.error_message;
+  const result = task?.result_data;
 
   // Handle successful completion
   useEffect(() => {

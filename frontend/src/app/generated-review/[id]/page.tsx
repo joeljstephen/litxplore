@@ -9,8 +9,9 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
   const { data: reviews, isLoading } = useGetReviewHistory();
 
   const review = useMemo(() => {
-    if (!reviews) return null;
-    return reviews.find((r) => r.id === parseInt(params.id));
+    // Orval v8 wraps in { data, status }
+    if (reviews?.status !== 200) return null;
+    return reviews.data.find((r) => r.id === parseInt(params.id));
   }, [reviews, params.id]);
 
   if (isLoading) {
