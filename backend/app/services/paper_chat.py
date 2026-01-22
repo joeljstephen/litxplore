@@ -1,6 +1,8 @@
 import os
 import tempfile
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import AsyncGenerator, Dict, Any
 from urllib.parse import urlparse
 import requests
@@ -36,9 +38,29 @@ class PaperChatService:
                 google_api_key=settings.GEMINI_API_KEY,
                 temperature=0.7
             )
+
+            # Thread pool for CPU-intensive operations
+            self.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="chat_worker")
         except Exception as e:
             logger.error(f"Failed to initialize PaperChatService: {str(e)}")
             raise
+
+    def _process_pdf_blocking(self, pdf_path: str):
+        """Synchronous PDF processing for RAG - runs in thread pool."""
+        loader = PyPDFLoader(pdf_path)
+        documents = loader.load()
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            separators=["\n\n", "\n", " ", ""]
+        )
+        texts = text_splitter.split_documents(documents)
+
+        # Create vector store (CPU-intensive)
+        vectorstore = FAISS.from_documents(texts, self.embeddings)
+
+        return documents, texts, vectorstore
 
     async def chat_with_paper_stream(
         self,
@@ -124,18 +146,14 @@ class PaperChatService:
 
             # Process PDF
             try:
-                loader = PyPDFLoader(temp_pdf_path)
-                documents = loader.load()
-
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=1000,
-                    chunk_overlap=200,
-                    separators=["\n\n", "\n", " ", ""]
+                # Run CPU-intensive operations in thread pool to avoid blocking
+                loop = asyncio.get_event_loop()
+                documents, texts, vectorstore = await loop.run_in_executor(
+                    self.executor,
+                    self._process_pdf_blocking,
+                    temp_pdf_path
                 )
-                texts = text_splitter.split_documents(documents)
 
-                # Create vector store
-                vectorstore = FAISS.from_documents(texts, self.embeddings)
                 retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
 
                 # Create QA chain using modern LangChain approach

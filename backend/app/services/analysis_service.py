@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 import requests
 import arxiv
+from concurrent.futures import ThreadPoolExecutor
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -44,23 +45,23 @@ class AnalysisService:
             if not settings.GEMINI_API_KEY:
                 raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-            self.embeddings = GoogleGenerativeAIEmbeddings(
-                model="models/embedding-001",
-                google_api_key=settings.GEMINI_API_KEY,
-            )
+            # Removed: self.embeddings - not used in analysis and adds unnecessary overhead
 
             self.llm = ChatGoogleGenerativeAI(
                 model="gemini-2.0-flash",
                 google_api_key=settings.GEMINI_API_KEY,
                 temperature=0.7
             )
-            
+
+            # Thread pool for CPU-intensive PDF processing
+            self.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pdf_worker")
+
             # Initialize Redis cache (optional, can be None if not configured)
             self.cache = self._init_cache()
-            
+
             # Load prompt templates
             self.prompts = self._load_prompts()
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize AnalysisService: {str(e)}")
             raise HTTPException(
@@ -183,21 +184,32 @@ class AnalysisService:
                     detail=f"Failed to fetch paper: {str(e)}"
                 )
 
+    def _extract_text_blocking(self, pdf_path: str) -> tuple[str, Dict[int, str]]:
+        """Synchronous PDF extraction - runs in thread pool."""
+        loader = PyPDFLoader(pdf_path)
+        pages = loader.load()
+
+        full_text = ""
+        page_map = {}
+
+        for i, page in enumerate(pages):
+            page_map[i] = page.page_content
+            full_text += f"\n--- Page {i + 1} ---\n{page.page_content}"
+
+        return full_text, page_map
+
     async def _extract_text_with_pages(self, pdf_path: str) -> tuple[str, Dict[int, str]]:
-        """Extract text from PDF with page mapping."""
+        """Extract text from PDF with page mapping - runs in thread pool to avoid blocking."""
         try:
-            loader = PyPDFLoader(pdf_path)
-            pages = loader.load()
-            
-            full_text = ""
-            page_map = {}
-            
-            for i, page in enumerate(pages):
-                page_map[i] = page.page_content
-                full_text += f"\n--- Page {i + 1} ---\n{page.page_content}"
-            
+            loop = asyncio.get_event_loop()
+            # Run the blocking PDF processing in a thread pool
+            full_text, page_map = await loop.run_in_executor(
+                self.executor,
+                self._extract_text_blocking,
+                pdf_path
+            )
             return full_text, page_map
-            
+
         except Exception as e:
             logger.error(f"Failed to extract text from PDF: {str(e)}")
             raise HTTPException(
