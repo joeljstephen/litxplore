@@ -67,7 +67,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "eslint": "8.49.0",
+    "eslint": "^9.39.2",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
@@ -75,7 +75,7 @@
     "next": "^14.2.35",
     "next-themes": "^0.3.0",
     "openai": "^4.85.1",
-    "orval": "^7.13.2",
+    "orval": "^8.0.3",
     "postcss": "8.4.31",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
@@ -102,12 +102,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/parser": "^8.53.1",
     "chokidar": "^3.6.0",
     "concurrently": "^9.2.1",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.35",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.4",
     "tsx": "^4.20.6"
   }
 }
