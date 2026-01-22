@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetReviewHistory,
   useDeleteReview,
@@ -84,6 +85,7 @@ const DeleteButton = ({
 export default function HistoryPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [parsedCitations, setParsedCitations] = useState<Paper[]>([]);
@@ -108,6 +110,7 @@ export default function HistoryPage() {
   const deleteReview = useDeleteReview({
     mutation: {
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetReviewHistoryQueryKey() });
         setDeletingReviewId(null);
       },
       onError: (err) => {
