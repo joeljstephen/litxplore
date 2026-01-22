@@ -33,6 +33,7 @@ langserve>=0.0.30
 langchain-community>=0.0.16
 langchain-openai>=0.0.5
 langchain-google-genai>=0.0.5
+langchain-text-splitters>=0.0.1
 
 # Vector store and embeddings
 faiss-cpu
