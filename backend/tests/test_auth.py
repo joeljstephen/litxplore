@@ -1,9 +1,9 @@
 import pytest
 import jwt
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-from app.core.auth import get_current_user, get_jwks, validate_token_claims, extract_user_data_from_token
+from app.core.auth import get_current_user, get_jwks, validate_token_claims, extract_user_data_from_token, get_signing_key
 from app.utils.error_utils import ErrorCode
 from sqlalchemy.orm import Session
 
@@ -61,16 +61,14 @@ class TestAuthentication:
         return credentials
     
     @patch("app.core.auth.PyJWT.get_unverified_header")
-    @patch("app.core.auth.get_jwks")
+    @patch("app.core.auth.get_signing_key")
     @patch("app.core.auth.PyJWT.decode")
-    @patch("app.core.auth.PyJWT.algorithms.RSAAlgorithm.from_jwk")
     @patch("app.core.auth.get_or_create_user")
     async def test_get_current_user_success(
         self, 
         mock_get_or_create_user,
-        mock_from_jwk,
         mock_decode,
-        mock_get_jwks,
+        mock_get_signing_key,
         mock_get_unverified_header,
         mock_db_session,
         mock_user,
@@ -81,13 +79,9 @@ class TestAuthentication:
         token, header = create_mock_token()
         mock_get_unverified_header.return_value = header
         
-        # Mock JWKS response
-        mock_jwks = {"keys": [{"kid": "test_kid", "n": "test", "e": "test"}]}
-        mock_get_jwks.return_value = mock_jwks
-        
-        # Mock RSA key
+        # Mock signing key retrieval (async)
         mock_key = MagicMock()
-        mock_from_jwk.return_value = mock_key
+        mock_get_signing_key.return_value = mock_key
         
         # Mock JWT decode
         mock_payload = {
@@ -109,8 +103,7 @@ class TestAuthentication:
         # Verify results
         assert user == mock_user
         mock_get_unverified_header.assert_called_once_with(mock_credentials.credentials)
-        mock_get_jwks.assert_called_once()
-        mock_from_jwk.assert_called_once()
+        mock_get_signing_key.assert_called_once_with("test_kid")
         mock_decode.assert_called_once()
         mock_get_or_create_user.assert_called_once_with(
             db=mock_db_session,
@@ -137,16 +130,13 @@ class TestAuthentication:
         
         # Verify exception details
         assert exc_info.value.status_code == 401
-        assert "Invalid token format" in str(exc_info.value.detail)
         assert ErrorCode.INVALID_TOKEN in str(exc_info.value.detail)
     
     @patch("app.core.auth.PyJWT.get_unverified_header")
-    @patch("app.core.auth.get_jwks")
-    @patch("app.core.auth.PyJWT.algorithms.RSAAlgorithm.from_jwk")
+    @patch("app.core.auth.get_signing_key")
     async def test_key_not_found(
         self,
-        mock_from_jwk,
-        mock_get_jwks,
+        mock_get_signing_key,
         mock_get_unverified_header,
         mock_credentials,
         mock_db_session
@@ -155,9 +145,11 @@ class TestAuthentication:
         # Set up mocks
         mock_get_unverified_header.return_value = {"kid": "unknown_kid"}
         
-        # Mock JWKS response with no matching kid
-        mock_jwks = {"keys": [{"kid": "different_kid", "n": "test", "e": "test"}]}
-        mock_get_jwks.return_value = mock_jwks
+        # Mock get_signing_key to raise HTTPException (simulating key not found)
+        mock_get_signing_key.side_effect = HTTPException(
+            status_code=401,
+            detail={"error": {"code": ErrorCode.JWKS_ERROR, "message": "Invalid token"}}
+        )
         
         # Call the function and check for exception
         with pytest.raises(HTTPException) as exc_info:
@@ -165,18 +157,15 @@ class TestAuthentication:
         
         # Verify exception details
         assert exc_info.value.status_code == 401
-        assert "Key not found in JWKS" in str(exc_info.value.detail)
         assert ErrorCode.JWKS_ERROR in str(exc_info.value.detail)
     
     @patch("app.core.auth.PyJWT.get_unverified_header")
-    @patch("app.core.auth.get_jwks")
-    @patch("app.core.auth.PyJWT.algorithms.RSAAlgorithm.from_jwk")
+    @patch("app.core.auth.get_signing_key")
     @patch("app.core.auth.PyJWT.decode")
     async def test_expired_token(
         self,
         mock_decode,
-        mock_from_jwk,
-        mock_get_jwks,
+        mock_get_signing_key,
         mock_get_unverified_header,
         mock_credentials,
         mock_db_session
@@ -185,13 +174,9 @@ class TestAuthentication:
         # Set up mocks
         mock_get_unverified_header.return_value = {"kid": "test_kid"}
         
-        # Mock JWKS response
-        mock_jwks = {"keys": [{"kid": "test_kid", "n": "test", "e": "test"}]}
-        mock_get_jwks.return_value = mock_jwks
-        
-        # Mock RSA key
+        # Mock signing key retrieval
         mock_key = MagicMock()
-        mock_from_jwk.return_value = mock_key
+        mock_get_signing_key.return_value = mock_key
         
         # Mock JWT decode to raise ExpiredSignatureError
         mock_decode.side_effect = jwt.exceptions.ExpiredSignatureError("Token has expired")
@@ -231,10 +216,41 @@ class TestAuthentication:
         
         # Verify exception details
         assert exc_info.value.status_code == 401
-        assert "Missing required claims" in str(exc_info.value.detail)
-        assert "exp" in str(exc_info.value.detail)
-        assert "iat" in str(exc_info.value.detail)
+        assert ErrorCode.INVALID_TOKEN in str(exc_info.value.detail)
     
+    @patch("app.core.auth.settings")
+    def test_validate_token_claims_invalid_azp(self, mock_settings):
+        """Test validation failure when azp is not in authorized parties"""
+        mock_settings.CLERK_AUTHORIZED_PARTIES = ["https://allowed-origin.com"]
+        
+        payload = {
+            "sub": "test_clerk_id",
+            "exp": int((datetime.utcnow() + timedelta(hours=1)).timestamp()),
+            "iat": int(datetime.utcnow().timestamp()),
+            "azp": "https://malicious-origin.com"  # Not in allowed list
+        }
+        
+        with pytest.raises(HTTPException) as exc_info:
+            validate_token_claims(payload)
+        
+        assert exc_info.value.status_code == 401
+        assert ErrorCode.INVALID_TOKEN in str(exc_info.value.detail)
+    
+    @patch("app.core.auth.settings")
+    def test_validate_token_claims_valid_azp(self, mock_settings):
+        """Test validation succeeds when azp is in authorized parties"""
+        mock_settings.CLERK_AUTHORIZED_PARTIES = ["https://litxplore.com"]
+        
+        payload = {
+            "sub": "test_clerk_id",
+            "exp": int((datetime.utcnow() + timedelta(hours=1)).timestamp()),
+            "iat": int(datetime.utcnow().timestamp()),
+            "azp": "https://litxplore.com"
+        }
+        
+        # Should not raise an exception
+        validate_token_claims(payload)
+
     def test_extract_user_data_from_token(self):
         """Test extraction of user data from token payload"""
         # Test with standard format

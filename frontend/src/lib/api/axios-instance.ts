@@ -49,6 +49,19 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+// Custom error class that preserves status code for proper retry logic
+class ApiError extends Error {
+  status: number;
+  code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 // Response interceptor to handle errors consistently
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -58,6 +71,7 @@ axiosInstance.interceptors.response.use(
 
       // Parse standardized error format from backend
       let errorMessage = `Request failed with status ${status}`;
+      let errorCode: string | undefined;
 
       if (data && typeof data === "object") {
         const errorData = data as any;
@@ -65,22 +79,31 @@ axiosInstance.interceptors.response.use(
         // Handle standardized error format
         if (errorData.status === "error" && errorData.error) {
           errorMessage = errorData.error.message || errorMessage;
+          errorCode = errorData.error.code;
         } else if (errorData.detail) {
-          errorMessage = Array.isArray(errorData.detail)
-            ? errorData.detail[0]?.msg || errorData.detail[0] || errorMessage
-            : errorData.detail;
+          if (typeof errorData.detail === "object" && errorData.detail.error) {
+            errorMessage = errorData.detail.error.message || errorMessage;
+            errorCode = errorData.detail.error.code;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage =
+              errorData.detail[0]?.msg || errorData.detail[0] || errorMessage;
+          } else if (typeof errorData.detail === "string") {
+            errorMessage = errorData.detail;
+          }
         }
       }
 
-      // Create a new error with the parsed message
-      const customError = new Error(errorMessage);
-      return Promise.reject(customError);
+      // Create an ApiError that preserves status code for retry logic
+      const apiError = new ApiError(errorMessage, status, errorCode);
+      return Promise.reject(apiError);
     }
 
     // Network error or no response
     return Promise.reject(error);
   }
 );
+
+export { ApiError };
 
 // Custom instance for Orval
 export const customInstance = <T>(

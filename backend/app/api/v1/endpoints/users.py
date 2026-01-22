@@ -25,6 +25,9 @@ async def verify_clerk_webhook(
     """
     Verify the Clerk webhook signature using Svix library.
     Returns the verified payload if signature is valid.
+    
+    SECURITY: This endpoint MUST verify webhook signatures in production.
+    Without verification, attackers could create/update users arbitrarily.
     """
     if not all([svix_id, svix_timestamp, svix_signature]):
         raise_unauthorized(
@@ -32,19 +35,26 @@ async def verify_clerk_webhook(
             error_code=ErrorCode.UNAUTHORIZED
         )
     
-    # Check if webhook secret is configured
+    # SECURITY: Webhook secret is REQUIRED in production
+    # Without it, anyone can forge webhook payloads and create users
     if not settings.CLERK_WEBHOOK_SECRET:
-        logger.warning("CLERK_WEBHOOK_SECRET not configured - webhook verification disabled")
-        # Fall back to just parsing the body without verification
-        # This allows development without webhook secret but logs a warning
-        body = await request.body()
-        try:
-            return json.loads(body)
-        except json.JSONDecodeError:
-            raise_validation_error(
-                message="Invalid JSON payload",
-                error_code=ErrorCode.VALIDATION_ERROR
+        if settings.PRODUCTION or settings.ENV == "production":
+            logger.error("CLERK_WEBHOOK_SECRET not configured in production - rejecting webhook")
+            raise_internal_error(
+                message="Webhook configuration error",
+                error_code=ErrorCode.INTERNAL_ERROR
             )
+        else:
+            # Development only: allow unverified webhooks with a warning
+            logger.warning("CLERK_WEBHOOK_SECRET not configured - DEVELOPMENT MODE: webhook verification disabled")
+            body = await request.body()
+            try:
+                return json.loads(body)
+            except json.JSONDecodeError:
+                raise_validation_error(
+                    message="Invalid JSON payload",
+                    error_code=ErrorCode.VALIDATION_ERROR
+                )
     
     # Get the raw request body for signature verification
     body = await request.body()

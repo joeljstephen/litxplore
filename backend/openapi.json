@@ -340,7 +340,7 @@
           "documents"
         ],
         "summary": "Generate Document",
-        "description": "Generate a document in PDF or LaTeX format",
+        "description": "Generate a document in PDF or LaTeX format (requires authentication)",
         "operationId": "generateDocument",
         "requestBody": {
           "content": {
@@ -366,7 +366,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/users/webhook/clerk": {
@@ -375,7 +380,7 @@
           "users"
         ],
         "summary": "Clerk Webhook",
-        "description": "Handle Clerk webhook events for user synchronization",
+        "description": "Handle Clerk webhook events for user synchronization.\nThe payload is verified using Svix signature verification.",
         "operationId": "clerk_webhook_api_v1_users_webhook_clerk_post",
         "parameters": [
           {
@@ -406,18 +411,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Payload"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -813,7 +806,7 @@
           "chat"
         ],
         "summary": "Chat With Paper",
-        "description": "Chat endpoint for paper-specific questions.\n\nStreams responses using Server-Sent Events (SSE) format.\n\nArgs:\n    paper_id: The ID of the paper to chat about\n    message: The user's question or message\n    current_user: Authenticated user\n\nReturns:\n    StreamingResponse with SSE-formatted chunks",
+        "description": "Chat endpoint for paper-specific questions.\n\nStreams responses using Server-Sent Events (SSE) format.\n\nArgs:\n    paper_id: The ID of the paper to chat about\n    message: The user's question or message (max 4000 characters)\n    current_user: Authenticated user\n\nReturns:\n    StreamingResponse with SSE-formatted chunks",
         "operationId": "chatWithPaper",
         "security": [
           {
@@ -836,6 +829,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
               "description": "The user's question or message",
               "title": "Message"
             },
@@ -1042,24 +1037,27 @@
         "properties": {
           "content": {
             "type": "string",
+            "maxLength": 50000,
             "minLength": 1,
             "title": "Content",
-            "description": "The content of the review"
+            "description": "The content of the review (max 50,000 characters)"
           },
           "citations": {
             "items": {
               "$ref": "#/components/schemas/Paper"
             },
             "type": "array",
+            "maxItems": 200,
             "minItems": 1,
             "title": "Citations",
-            "description": "List of cited papers"
+            "description": "List of cited papers (max 200 papers)"
           },
           "topic": {
             "type": "string",
+            "maxLength": 500,
             "minLength": 1,
             "title": "Topic",
-            "description": "The review topic"
+            "description": "The review topic (max 500 characters)"
           },
           "format": {
             "type": "string",
@@ -1084,7 +1082,7 @@
                 "Author 2"
               ],
               "id": "paper_id",
-              "published": "2026-01-21T09:37:55.797132",
+              "published": "2026-01-21T18:24:35.152370",
               "summary": "Paper summary",
               "title": "Paper Title",
               "url": "http://example.com/paper.pdf"

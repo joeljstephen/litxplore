@@ -56,12 +56,14 @@ class Settings(BaseSettings):
     # Clerk Settings
     CLERK_ISSUER: str
     CLERK_FRONTEND_API: str
-    # CLERK_AUDIENCE: List[str]
     CLERK_SECRET_KEY: str
     CLERK_PUBLISHABLE_KEY: str
     CLERK_JWKS_URL: str
-    JWT_ALGORITHM: str
-    CLERK_WEBHOOK_SECRET: Optional[str] = None  # For webhook signature verification
+    JWT_ALGORITHM: str = "RS256"
+    CLERK_WEBHOOK_SECRET: Optional[str] = None  # For webhook signature verification (REQUIRED in production)
+    # Authorized parties (azp) - frontend URLs that can use tokens with this backend
+    # e.g., ["https://litxplore.com", "https://www.litxplore.com"]
+    CLERK_AUTHORIZED_PARTIES: List[str] = []
     
     class Config:
         env_file = ".env"

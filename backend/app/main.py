@@ -25,7 +25,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Setup CORS
+# Setup CORS with production-appropriate settings
 # Only add CORS middleware when not behind a reverse proxy that handles CORS
 if not settings.BEHIND_PROXY:
     print("Adding CORS middleware (not running behind proxy)")
@@ -33,9 +33,9 @@ if not settings.BEHIND_PROXY:
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"]
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],  # Allow all headers for preflight compatibility
+        expose_headers=["Content-Disposition"],
     )
 else:
     print("Skipping CORS middleware (running behind proxy that handles CORS)")
@@ -45,6 +45,33 @@ os.makedirs("uploads", exist_ok=True)
 
 # Mount the uploads directory
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# Security headers middleware - adds recommended security headers to all responses
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Prevent MIME type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        
+        # Prevent clickjacking
+        response.headers["X-Frame-Options"] = "DENY"
+        
+        # XSS protection (for older browsers)
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        
+        # Referrer policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Content Security Policy for API responses
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        
+        # HTTPS enforcement (only in production)
+        if settings.PRODUCTION:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        return response
+
 
 # Define background task middleware for PDF cleanup
 class BackgroundTaskMiddleware(BaseHTTPMiddleware):
@@ -78,6 +105,9 @@ app.add_middleware(SlowAPIMiddleware)
 
 # Add background task middleware - this must be added AFTER the SlowAPIMiddleware
 app.add_middleware(BackgroundTaskMiddleware)
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Include routers
 app.include_router(
@@ -129,19 +159,18 @@ app.include_router(
 def health_check():
     return {"status": "healthy", "service": "LitXplore API"}
 
-# Database test endpoint
-@app.get("/db-test")
-@app.get(f"{settings.API_V1_STR}/db-test")
-def test_db(db: Session = Depends(get_db)):
-    try:
-        # Try to execute a simple query
-        from sqlalchemy import text
-        db.execute(text("SELECT 1"))
-        return {"status": "Database connection successful"}
-    except Exception as e:
-        import traceback
-        trace = traceback.format_exc()
-        return {"status": "Database connection failed", "error": str(e), "trace": trace}
+# Database test endpoint - ONLY available in non-production environments
+# This endpoint can leak sensitive information and should never be exposed in production
+if not settings.PRODUCTION and settings.ENV != "production":
+    @app.get("/db-test")
+    @app.get(f"{settings.API_V1_STR}/db-test")
+    def test_db(db: Session = Depends(get_db)):
+        try:
+            from sqlalchemy import text
+            db.execute(text("SELECT 1"))
+            return {"status": "Database connection successful"}
+        except Exception as e:
+            return {"status": "Database connection failed", "error": str(e)}
 
 @app.on_event("startup")
 async def startup_event():

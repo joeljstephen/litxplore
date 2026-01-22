@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Response, status, Depends
 from typing import List
 from ....models.paper import Paper, ReviewContent
+from ....models.user import User
 from ....services.document_service import DocumentService
+from ....core.auth import get_current_user
 from ....utils.error_utils import raise_validation_error, raise_internal_error, ErrorCode
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
@@ -66,8 +68,11 @@ router = APIRouter()
 document_service = DocumentService()
 
 @router.post("/generate", response_class=Response, status_code=status.HTTP_200_OK, operation_id="generateDocument")
-async def generate_document(request: DocumentGenerateRequest):
-    """Generate a document in PDF or LaTeX format"""
+async def generate_document(
+    request: DocumentGenerateRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate a document in PDF or LaTeX format (requires authentication)"""
     try:
         content = await document_service.generate_document(
             content=request.content,
