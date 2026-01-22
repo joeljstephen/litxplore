@@ -61,7 +61,7 @@ export default function Home() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="rounded-xl px-8 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all"
+                className="rounded-xl px-8 border-primary/30 hover:bg-primary/10 hover:border-primary/50 hover:text-primary transition-all"
               >
                 <Link href="/review" className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
