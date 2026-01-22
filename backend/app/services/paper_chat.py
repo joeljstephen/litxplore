@@ -10,8 +10,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.chains import ConversationalRetrievalChain
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from ..core.config import get_settings
 from ..utils.input_validation import extract_upload_hash, is_valid_arxiv_id
 
@@ -46,11 +47,11 @@ class PaperChatService:
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Chat with a paper using streaming responses.
-        
+
         Handles both arXiv papers and uploaded PDFs.
         """
         temp_pdf_path = None
-        
+
         try:
             # Fetch paper with path traversal protection
             if paper_id.startswith("upload_"):
@@ -62,16 +63,16 @@ class PaperChatService:
                         "sources": []
                     }
                     return
-                
+
                 pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
-                
+
                 if not os.path.exists(pdf_path):
                     yield {
                         "content": "Error: Uploaded PDF file not found",
                         "sources": []
                     }
                     return
-                
+
                 with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                     with open(pdf_path, "rb") as f:
                         tmp.write(f.read())
@@ -84,13 +85,13 @@ class PaperChatService:
                         "sources": []
                     }
                     return
-                
+
                 # Fetch from arXiv
                 try:
                     client = arxiv.Client()
                     search = arxiv.Search(id_list=[paper_id])
                     arxiv_paper = next(client.results(search))
-                    
+
                     # SSRF protection: validate the PDF URL host
                     pdf_url = arxiv_paper.pdf_url
                     parsed_url = urlparse(pdf_url)
@@ -101,10 +102,10 @@ class PaperChatService:
                             "sources": []
                         }
                         return
-                    
+
                     response = requests.get(pdf_url, timeout=30)
                     response.raise_for_status()
-                    
+
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                         tmp.write(response.content)
                         temp_pdf_path = tmp.name
@@ -120,53 +121,63 @@ class PaperChatService:
                         "sources": []
                     }
                     return
-            
+
             # Process PDF
             try:
                 loader = PyPDFLoader(temp_pdf_path)
                 documents = loader.load()
-                
+
                 text_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=1000,
                     chunk_overlap=200,
                     separators=["\n\n", "\n", " ", ""]
                 )
                 texts = text_splitter.split_documents(documents)
-                
+
                 # Create vector store
                 vectorstore = FAISS.from_documents(texts, self.embeddings)
-                
-                # Create QA chain
-                chat_prompt = PromptTemplate.from_template(
-                    """You are a knowledgeable research paper expert. Answer the following question based on the paper content:
-                    
+                retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+
+                # Create QA chain using modern LangChain approach
+                template = """You are a knowledgeable research paper expert. Answer the following question based on the paper content:
+
 Context: {context}
 Question: {question}
 
 Provide a clear, detailed response with specific references to the paper where relevant."""
-                )
 
-                qa_chain = ConversationalRetrievalChain.from_llm(
-                    llm=self.llm,
-                    retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
-                    return_source_documents=True,
-                    combine_docs_chain_kwargs={"prompt": chat_prompt}
+                prompt = ChatPromptTemplate.from_template(template)
+
+                def format_docs(docs):
+                    return "\n\n".join(doc.page_content for doc in docs)
+
+                rag_chain = (
+                    {
+                        "context": retriever | format_docs,
+                        "question": RunnablePassthrough()
+                    }
+                    | prompt
+                    | self.llm
+                    | StrOutputParser()
                 )
 
                 # Get response
-                result = qa_chain({"question": message, "chat_history": []})
-                
+                result = await rag_chain.ainvoke(message)
+
+                # Get source documents separately
+                source_docs = retriever.invoke(message)
+
                 # Stream response
-                response = result["answer"]
+                response = result
                 chunk_size = 100
-                
+
                 for i in range(0, len(response), chunk_size):
                     chunk = response[i:i + chunk_size]
                     yield {
                         "content": chunk,
                         "sources": [
                             {"page": doc.metadata.get("page", 0)}
-                            for doc in result["source_documents"]
+                            for doc in source_docs
                         ] if i == 0 else []
                     }
 
@@ -176,7 +187,7 @@ Provide a clear, detailed response with specific references to the paper where r
                     "content": f"Error processing document: {str(e)}",
                     "sources": []
                 }
-        
+
         finally:
             if temp_pdf_path and os.path.exists(temp_pdf_path):
                 try:
