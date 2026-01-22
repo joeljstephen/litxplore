@@ -5,6 +5,7 @@ import os
 import requests
 import logging
 import re
+import time
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -281,6 +282,7 @@ Paper text to analyze:
                     summary = line.replace("Summary:", "").strip()[:2000]
             
             # Save the PDF to the uploads directory
+            # Note: PDFs are kept temporarily for review generation and cleaned up after
             pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
             with open(pdf_path, "wb") as f:
                 f.write(content)
@@ -349,14 +351,14 @@ Paper text to analyze:
                 status_code=400,
                 detail="Invalid content hash format"
             )
-        
+
         pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
-        
+
         try:
             loader = PyPDFLoader(pdf_path)
             pages = loader.load()
             full_text = "\n".join(page.page_content for page in pages)
-            
+
             # Use saved metadata or extract again if needed
             # This is a simplified version - in production, store metadata in a database
             return {
@@ -372,6 +374,44 @@ Paper text to analyze:
                 status_code=500,
                 detail=f"Failed to retrieve paper metadata: {str(e)}"
             )
+
+    @staticmethod
+    def cleanup_old_uploads(max_age_hours: int = 24):
+        """Remove uploaded PDFs that are older than the specified age.
+        This helps clean up files that were uploaded but never used for review generation.
+
+        Args:
+            max_age_hours: Maximum age in hours before a file is considered old (default: 24)
+        """
+        upload_dir = "uploads"
+        if not os.path.exists(upload_dir):
+            return
+
+        now = time.time()
+        max_age_seconds = max_age_hours * 3600
+        cleaned_count = 0
+
+        try:
+            for filename in os.listdir(upload_dir):
+                if not filename.endswith('.pdf'):
+                    continue
+
+                file_path = os.path.join(upload_dir, filename)
+                file_age = now - os.path.getmtime(file_path)
+
+                if file_age > max_age_seconds:
+                    try:
+                        os.remove(file_path)
+                        cleaned_count += 1
+                        logging.info(f"Removed old upload: {filename} (age: {file_age/3600:.1f} hours)")
+                    except Exception as e:
+                        logging.warning(f"Failed to remove old upload {filename}: {e}")
+
+            if cleaned_count > 0:
+                logging.info(f"Cleanup completed: removed {cleaned_count} old upload(s)")
+
+        except Exception as e:
+            logging.error(f"Error during upload cleanup: {e}")
 
     async def generate_review(self, topic: str, papers: List[Paper], max_papers: int = 10) -> str:
         """Generate literature review using both ArXiv and uploaded papers."""

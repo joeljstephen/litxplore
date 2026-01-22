@@ -175,7 +175,28 @@ if not settings.PRODUCTION and settings.ENV != "production":
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
-    pass
+    import asyncio
+    from app.services.paper_service import PaperService
+
+    # Schedule periodic cleanup of old uploads (every 6 hours)
+    async def periodic_cleanup():
+        while True:
+            try:
+                await asyncio.sleep(6 * 3600)  # Sleep for 6 hours
+                PaperService.cleanup_old_uploads(max_age_hours=24)
+            except Exception as e:
+                logging.error(f"Error in periodic cleanup: {e}")
+
+    # Start the periodic cleanup task
+    asyncio.create_task(periodic_cleanup())
+    logging.info("Started periodic PDF cleanup task (runs every 6 hours, removes files older than 24 hours)")
+
+    # Run initial cleanup on startup
+    try:
+        PaperService.cleanup_old_uploads(max_age_hours=24)
+        logging.info("Initial PDF cleanup completed on startup")
+    except Exception as e:
+        logging.error(f"Error in initial cleanup: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

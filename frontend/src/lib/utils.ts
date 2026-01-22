@@ -8,6 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Converts a string to title case, capitalizing the first letter of each word
  * except for common prepositions and articles.
+ * Preserves the rest of each word exactly as received.
  */
 export function titleCase(str: string): string {
   if (!str) return str;
@@ -20,18 +21,24 @@ export function titleCase(str: string): string {
   ]);
 
   return str
-    .toLowerCase()
     .split(/\s+/)
     .map((word, index) => {
-      // Always capitalize first word
+      const lowerWord = word.toLowerCase();
+
+      // Always capitalize first word (unless it's an article/preposition that should remain lowercase)
       if (index === 0) {
+        if (lowercaseWords.has(lowerWord)) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }
         return word.charAt(0).toUpperCase() + word.slice(1);
       }
+
       // Keep prepositions/articles lowercase
-      if (lowercaseWords.has(word)) {
-        return word;
+      if (lowercaseWords.has(lowerWord)) {
+        return lowerWord;
       }
-      // Capitalize other words
+
+      // Capitalize first letter, keep rest as-is
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
     .join(' ');

@@ -11,6 +11,7 @@ from app.models.paper import Paper
 from app.services.paper_service import PaperService
 from app.services.langchain_service import LangChainService
 from app.db.database import SessionLocal
+from app.api.v1.endpoints.review import cleanup_uploaded_pdfs
 import logging
 
 logger = logging.getLogger(__name__)
@@ -146,6 +147,8 @@ class TaskService:
                 logger.error(f"Failed to update task {task_id} with error: {commit_error}")
                 
         finally:
+            # Clean up uploaded PDFs after review generation (success or failure)
+            await cleanup_uploaded_pdfs(paper_ids)
             db.close()
 
     async def get_task_status(self, db: Session, task_id: str, user: User) -> Optional[Task]:
