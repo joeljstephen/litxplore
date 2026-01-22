@@ -121,7 +121,7 @@ function NavContent() {
           ) : isSignedIn ? (
             <div className="flex flex-col space-y-4">
               {/* User Profile Section */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-accent border border-border">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
                 <div className="flex items-center space-x-3">
                   <UserButton
                     appearance={{

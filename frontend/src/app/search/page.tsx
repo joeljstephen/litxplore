@@ -79,7 +79,7 @@ function SearchPageContent() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="container mx-auto px-4 py-8 space-y-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 mb-10">
           <Search className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-foreground tracking-tight">
