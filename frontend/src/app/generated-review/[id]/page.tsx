@@ -4,15 +4,19 @@ import { useGetReviewHistory, Paper } from "@/lib/api/generated";
 import { ReviewDisplay } from "@/components/ReviewDisplay";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
+import { useParams } from "next/navigation";
 
-export default function ReviewPage({ params }: { params: { id: string } }) {
+export default function ReviewPage() {
+  const params = useParams<{ id: string }>();
+  const reviewId = Array.isArray(params.id) ? params.id[0] : params.id;
   const { data: reviews, isLoading } = useGetReviewHistory();
 
   const review = useMemo(() => {
+    if (!reviewId) return null;
     // Orval v8 wraps in { data, status }
     if (reviews?.status !== 200) return null;
-    return reviews.data.find((r) => r.id === parseInt(params.id));
-  }, [reviews, params.id]);
+    return reviews.data.find((r) => r.id === parseInt(reviewId, 10));
+  }, [reviews, reviewId]);
 
   if (isLoading) {
     return (
