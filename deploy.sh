@@ -224,7 +224,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
-      - "traefik.http.routers.api.rule=Host(\`litxplore.tech\`) || Host(\`www.litxplore.tech\`)"
+      - "traefik.http.routers.api.rule=Host(\`api.litxplore.win\`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api.middlewares=cors,security"
@@ -278,7 +278,7 @@ fi
 # Check SSL (may take a few minutes)
 print_status "Checking HTTPS (may take a few minutes for SSL)..."
 for i in {1..5}; do
-    if curl -f -s https://litxplore.tech/health > /dev/null 2>&1; then
+    if curl -f -s https://api.litxplore.win/health > /dev/null 2>&1; then
         print_status "✅ HTTPS is working!"
         break
     else
@@ -290,12 +290,12 @@ done
 echo ""
 print_status "🎉 Deployment Complete!"
 echo ""
-print_status "Your API is available at: https://litxplore.tech"
+print_status "Your API is available at: https://api.litxplore.win"
 print_status "Traefik dashboard: http://$(curl -s ifconfig.me):8080"
 echo ""
 print_status "Update your frontend environment variables:"
-echo "NEXT_PUBLIC_API_URL=https://litxplore.tech"
-echo "NEXT_PUBLIC_API_BASE_URL=https://litxplore.tech/api/v1"
+echo "NEXT_PUBLIC_API_URL=https://api.litxplore.win"
+echo "NEXT_PUBLIC_API_BASE_URL=https://api.litxplore.win/api/v1"
 echo ""
 print_status "Useful commands:"
 echo "• View logs: docker-compose logs -f"

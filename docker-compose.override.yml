@@ -54,7 +54,7 @@ services:
       # CORS
       - traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS
       - traefik.http.middlewares.cors.headers.accesscontrolallowheaders=Authorization,Content-Type,Cache-Control,Pragma,Accept,Origin,Expires,expires,X-CSRF-Token
-      - traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=https://litxplore.vercel.app,https://litxplore.tech,https://www.litxplore.tech,http://localhost:3000
+      - traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=https://litxplore.vercel.app,http://localhost:3000
       - traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true
       - traefik.http.middlewares.cors.headers.accesscontrolmaxage=100
       - traefik.http.middlewares.cors.headers.addvaryheader=true
@@ -87,21 +87,21 @@ services:
       - traefik.http.middlewares.security.headers.stsseconds=31536000
 
       # --- Main API Router (General endpoints) ---
-      - traefik.http.routers.api.rule=Host(`litxplore.tech`) && !PathPrefix(`/api/v1/auth`) && !PathPrefix(`/api/v1/documents/upload`) && !PathPrefix(`/api/v1/review/generate`)
+      - traefik.http.routers.api.rule=Host(`api.litxplore.win`) && !PathPrefix(`/api/v1/auth`) && !PathPrefix(`/api/v1/documents/upload`) && !PathPrefix(`/api/v1/review/generate`)
       - traefik.http.routers.api.entrypoints=websecure
       - traefik.http.routers.api.tls.certresolver=myresolver
       - traefik.http.routers.api.middlewares=cors,security,api-ratelimit
       - traefik.http.routers.api.priority=1
 
       # --- Auth Router (Strict rate limiting) ---
-      - traefik.http.routers.api-auth.rule=Host(`litxplore.tech`) && PathPrefix(`/api/v1/auth`)
+      - traefik.http.routers.api-auth.rule=Host(`api.litxplore.win`) && PathPrefix(`/api/v1/auth`)
       - traefik.http.routers.api-auth.entrypoints=websecure
       - traefik.http.routers.api-auth.tls.certresolver=myresolver
       - traefik.http.routers.api-auth.middlewares=cors,security,strict-ratelimit
       - traefik.http.routers.api-auth.priority=3
 
       # --- Upload/Processing Router (Ultra-strict rate limiting) ---
-      - traefik.http.routers.api-uploads.rule=Host(`litxplore.tech`) && (PathPrefix(`/api/v1/documents/upload`) || PathPrefix(`/api/v1/review/generate`))
+      - traefik.http.routers.api-uploads.rule=Host(`api.litxplore.win`) && (PathPrefix(`/api/v1/documents/upload`) || PathPrefix(`/api/v1/review/generate`))
       - traefik.http.routers.api-uploads.entrypoints=websecure
       - traefik.http.routers.api-uploads.tls.certresolver=myresolver
       - traefik.http.routers.api-uploads.middlewares=cors,security,upload-ratelimit

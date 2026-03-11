@@ -5,7 +5,7 @@ Deploy your LitXplore backend in **one command**!
 ## Prerequisites
 
 - VPS with Ubuntu 20.04+
-- Domain `litxplore.tech` pointing to your VPS
+- Domain `api.litxplore.win` pointing to your VPS
 - Your API keys ready
 
 ## 🎯 One-Command Deployment
@@ -36,15 +36,15 @@ The script will ask for:
 - Gemini API key
 - Clerk secret key
 
-That's it! Your API will be live at `https://litxplore.tech`
+That's it! Your API will be live at `https://api.litxplore.win`
 
 ## 📱 Frontend Setup
 
 Update your Vercel environment variables:
 
 ```
-NEXT_PUBLIC_API_URL=https://litxplore.tech
-NEXT_PUBLIC_API_BASE_URL=https://litxplore.tech/api/v1
+NEXT_PUBLIC_API_URL=https://api.litxplore.win
+NEXT_PUBLIC_API_BASE_URL=https://api.litxplore.win/api/v1
 ```
 
 ## 🛠️ Management Commands
@@ -67,7 +67,7 @@ docker-compose up -d
 
 ## 🔍 Monitoring
 
-- **API**: https://litxplore.tech/health
+- **API**: https://api.litxplore.win/health
 - **Dashboard**: http://your-server-ip:8080
 
 ## 🆘 Troubleshooting

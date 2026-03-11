@@ -99,7 +99,7 @@ docker logs watchtower | grep -i "updated"
 curl -f http://localhost:8000/health
 
 # Or via Traefik (external)
-curl -f https://litxplore.tech/health
+curl -f https://api.litxplore.win/health
 ```
 
 ## Troubleshooting

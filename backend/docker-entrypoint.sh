@@ -31,7 +31,7 @@ BEHIND_PROXY=${BEHIND_PROXY:-"false"}
 PRODUCTION=${PRODUCTION:-"false"}
 
 # CORS Settings
-CORS_ORIGINS=["http://localhost:3000", "https://litxplore.tech", "https://litxplore.vercel.app"]
+CORS_ORIGINS=["http://localhost:3000", "https://litxplore.vercel.app"]
 CORS_ALLOW_CREDENTIALS=true
 CORS_ALLOW_METHODS=["GET","POST","PUT","DELETE","OPTIONS","PATCH"]
 CORS_ALLOW_HEADERS=["*"]
@@ -79,9 +79,14 @@ EOL
     fi
     
     # Ensure CORS settings include frontend URLs
-    if ! grep -q "litxplore.tech" .env; then
-      echo "Adding litxplore.tech to CORS_ORIGINS"
-      sed -i.bak 's/CORS_ORIGINS=\[\([^]]*\)\]/CORS_ORIGINS=[\\1,"https:\/\/litxplore.tech"]/g' .env && rm -f .env.bak
+    if ! grep -q "https://litxplore.vercel.app" .env; then
+      echo "Adding https://litxplore.vercel.app to CORS_ORIGINS"
+      sed -i.bak 's/CORS_ORIGINS=\[\([^]]*\)\]/CORS_ORIGINS=[\\1,"https:\/\/litxplore.vercel.app"]/g' .env && rm -f .env.bak
+    fi
+
+    if grep -q "litxplore.tech" .env; then
+      echo "Removing legacy litxplore.tech entries from CORS_ORIGINS"
+      sed -i.bak 's/,[[:space:]]*"https:\/\/litxplore\.tech"//g; s/,[[:space:]]*"https:\/\/www\.litxplore\.tech"//g' .env && rm -f .env.bak
     fi
     
     # Ensure Redis host is set correctly
