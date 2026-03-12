@@ -14,6 +14,20 @@ export const axiosInstance = Axios.create({
   withCredentials: true,
 });
 
+function removeContentTypeHeader(headers?: AxiosRequestConfig["headers"]) {
+  if (!headers) return;
+
+  if (typeof (headers as { delete?: (name: string) => void }).delete === "function") {
+    (headers as { delete: (name: string) => void }).delete("Content-Type");
+    return;
+  }
+
+  if (typeof headers === "object") {
+    delete (headers as Record<string, unknown>)["Content-Type"];
+    delete (headers as Record<string, unknown>)["content-type"];
+  }
+}
+
 // Token getter function - will be set by the auth provider
 let tokenGetter: (() => Promise<string | null>) | null = null;
 
@@ -44,6 +58,11 @@ axiosInstance.interceptors.request.use(
     config.headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
     config.headers["Pragma"] = "no-cache";
     config.headers["Expires"] = "0";
+
+    // Let the browser set the multipart boundary for FormData uploads.
+    if (config.data instanceof FormData) {
+      removeContentTypeHeader(config.headers);
+    }
 
     return config;
   },
