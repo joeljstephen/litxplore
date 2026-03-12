@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..models.paper import Paper
-from ..core.config import get_settings
+from ..core.config import get_settings, get_upload_dir_path
 from fastapi import HTTPException
 import hashlib
 from fastapi import UploadFile
@@ -22,6 +22,7 @@ import asyncio
 from ..utils.input_validation import extract_upload_hash, validate_content_hash
 
 settings = get_settings()
+UPLOAD_DIR = get_upload_dir_path()
 
 class PaperService:
     def __init__(self):
@@ -170,8 +171,7 @@ class PaperService:
         temp_pdf_path = None
         try:
             # Create uploads directory if it doesn't exist
-            upload_dir = "uploads"
-            os.makedirs(upload_dir, exist_ok=True)
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
 
             # Create a temporary file to store the PDF
             with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_pdf:
@@ -283,7 +283,7 @@ Paper text to analyze:
             
             # Save the PDF to the uploads directory
             # Note: PDFs are kept temporarily for review generation and cleaned up after
-            pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
+            pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
             with open(pdf_path, "wb") as f:
                 f.write(content)
 
@@ -323,15 +323,13 @@ Paper text to analyze:
     async def get_uploaded_papers(self, paper_ids: List[str]) -> List[Paper]:
         """Fetch papers that were previously uploaded."""
         papers = []
-        upload_dir = "uploads"
-
         for paper_id in paper_ids:
             # Validate upload ID format to prevent path traversal
             content_hash = extract_upload_hash(paper_id)
             if not content_hash:
                 continue
             
-            pdf_path = os.path.join(upload_dir, f"{content_hash}.pdf")
+            pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
             
             if not os.path.exists(pdf_path):
                 continue
@@ -352,7 +350,7 @@ Paper text to analyze:
                 detail="Invalid content hash format"
             )
 
-        pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
+        pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
 
         try:
             loader = PyPDFLoader(pdf_path)
@@ -383,8 +381,7 @@ Paper text to analyze:
         Args:
             max_age_hours: Maximum age in hours before a file is considered old (default: 24)
         """
-        upload_dir = "uploads"
-        if not os.path.exists(upload_dir):
+        if not os.path.exists(UPLOAD_DIR):
             return
 
         now = time.time()
@@ -392,11 +389,11 @@ Paper text to analyze:
         cleaned_count = 0
 
         try:
-            for filename in os.listdir(upload_dir):
+            for filename in os.listdir(UPLOAD_DIR):
                 if not filename.endswith('.pdf'):
                     continue
 
-                file_path = os.path.join(upload_dir, filename)
+                file_path = os.path.join(UPLOAD_DIR, filename)
                 file_age = now - os.path.getmtime(file_path)
 
                 if file_age > max_age_seconds:
@@ -424,7 +421,7 @@ Paper text to analyze:
                 content_hash = extract_upload_hash(paper.id)
                 if content_hash:
                     # Handle uploaded PDFs
-                    pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
+                    pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
                     if os.path.exists(pdf_path):
                         loader = PyPDFLoader(pdf_path)
                         documents.extend(loader.load())

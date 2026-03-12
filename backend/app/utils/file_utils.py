@@ -3,6 +3,7 @@ import os
 import logging
 from typing import List
 from app.utils.input_validation import extract_upload_hash
+from app.core.config import get_upload_dir_path
 
 
 async def cleanup_uploaded_pdfs(paper_ids: List[str]) -> dict:
@@ -20,7 +21,7 @@ async def cleanup_uploaded_pdfs(paper_ids: List[str]) -> dict:
         dict with cleanup status
     """
     try:
-        upload_dir = "uploads"
+        upload_dir = get_upload_dir_path()
         for paper_id in paper_ids:
             # Validate upload ID format to prevent path traversal attacks
             content_hash = extract_upload_hash(paper_id)

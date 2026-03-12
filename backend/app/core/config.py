@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 from typing import Optional, List
 from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +15,9 @@ class Settings(BaseSettings):
     # Deployment Settings
     BEHIND_PROXY: bool = False
     PRODUCTION: bool = False
+    UPLOAD_DIR: Optional[str] = None
+    UPLOAD_CLEANUP_INTERVAL_HOURS: int = 1
+    UPLOAD_MAX_AGE_HOURS: int = 1
     
     # CORS Settings
     CORS_ORIGINS: List[str]
@@ -77,3 +81,12 @@ def get_settings() -> Settings:
     return Settings()
 
 settings = get_settings()
+
+
+def get_upload_dir_path() -> str:
+    configured = settings.UPLOAD_DIR
+    if configured:
+        return os.path.abspath(configured)
+
+    backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    return os.path.join(backend_root, "upload")

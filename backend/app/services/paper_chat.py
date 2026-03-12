@@ -15,11 +15,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from ..core.config import get_settings
+from ..core.config import get_settings, get_upload_dir_path
 from ..utils.input_validation import extract_upload_hash, is_valid_arxiv_id
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+UPLOAD_DIR = get_upload_dir_path()
 
 
 class PaperChatService:
@@ -86,7 +87,7 @@ class PaperChatService:
                     }
                     return
 
-                pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
+                pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
 
                 if not os.path.exists(pdf_path):
                     yield {

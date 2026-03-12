@@ -23,7 +23,7 @@ from ..models.analysis import (
     InDepthAnalysis,
 )
 from ..models.paper import Paper
-from ..core.config import get_settings
+from ..core.config import get_settings, get_upload_dir_path
 from fastapi import HTTPException
 from .analysis_helpers import (
     invoke_llm_with_retry,
@@ -37,6 +37,7 @@ from .analysis_resilience import (
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+UPLOAD_DIR = get_upload_dir_path()
 
 
 class AnalysisService:
@@ -129,7 +130,7 @@ class AnalysisService:
         if paper_id.startswith("upload_"):
             # Handle uploaded PDF
             content_hash = paper_id.replace("upload_", "")
-            pdf_path = os.path.join("uploads", f"{content_hash}.pdf")
+            pdf_path = os.path.join(UPLOAD_DIR, f"{content_hash}.pdf")
             
             if not os.path.exists(pdf_path):
                 raise HTTPException(

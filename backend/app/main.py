@@ -10,11 +10,12 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from app.api.v1.endpoints import review, papers, documents, history, users, tasks, analysis, chat  # Change from relative to absolute import
-from .core.config import get_settings
+from .core.config import get_settings, get_upload_dir_path
 from app.db.database import engine, Base, get_db
 from sqlalchemy.orm import Session
 
 settings = get_settings()
+upload_dir = get_upload_dir_path()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -41,10 +42,10 @@ else:
     print("Skipping CORS middleware (running behind proxy that handles CORS)")
 
 # Create uploads directory if it doesn't exist
-os.makedirs("uploads", exist_ok=True)
+os.makedirs(upload_dir, exist_ok=True)
 
 # Mount the uploads directory
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 # Security headers middleware - adds recommended security headers to all responses
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -182,18 +183,22 @@ async def startup_event():
     async def periodic_cleanup():
         while True:
             try:
-                await asyncio.sleep(6 * 3600)  # Sleep for 6 hours
-                PaperService.cleanup_old_uploads(max_age_hours=24)
+                await asyncio.sleep(settings.UPLOAD_CLEANUP_INTERVAL_HOURS * 3600)
+                PaperService.cleanup_old_uploads(max_age_hours=settings.UPLOAD_MAX_AGE_HOURS)
             except Exception as e:
                 logging.error(f"Error in periodic cleanup: {e}")
 
     # Start the periodic cleanup task
     asyncio.create_task(periodic_cleanup())
-    logging.info("Started periodic PDF cleanup task (runs every 6 hours, removes files older than 24 hours)")
+    logging.info(
+        "Started periodic PDF cleanup task (runs every %s hour(s), removes files older than %s hour(s))",
+        settings.UPLOAD_CLEANUP_INTERVAL_HOURS,
+        settings.UPLOAD_MAX_AGE_HOURS,
+    )
 
     # Run initial cleanup on startup
     try:
-        PaperService.cleanup_old_uploads(max_age_hours=24)
+        PaperService.cleanup_old_uploads(max_age_hours=settings.UPLOAD_MAX_AGE_HOURS)
         logging.info("Initial PDF cleanup completed on startup")
     except Exception as e:
         logging.error(f"Error in initial cleanup: {e}")
