@@ -17,7 +17,7 @@ This document describes the automatic deployment setup for the LitXplore backend
 - **Trigger**: Pushes to `main` branch with changes in `backend/` directory
 - **Actions**:
   - Builds Docker image using multi-stage build
-  - Pushes to GitHub Container Registry (`ghcr.io/joeljacobstephen/litxplore-backend`)
+  - Pushes to GitHub Container Registry (`ghcr.io/joeljstephen/litxplore-backend`)
   - Uses Docker layer caching for faster builds
   - Supports manual triggering via workflow_dispatch
 
@@ -129,7 +129,7 @@ If automatic deployment fails, you can manually deploy:
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/joeljacobstephen/litxplore-backend:latest
+docker pull ghcr.io/joeljstephen/litxplore-backend:latest
 
 # Restart the service
 docker-compose -f backend/docker-compose.prod.yml -f docker-compose.override.yml up -d api

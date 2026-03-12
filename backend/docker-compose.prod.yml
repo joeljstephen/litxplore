@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   api:
-    image: ghcr.io/joeljacobstephen/litxplore-backend:latest
+    image: ghcr.io/joeljstephen/litxplore-backend:latest
     container_name: litxplore_backend
     ports:
       - "8000:8000" # Only accessible from localhost as nginx proxies this
@@ -13,6 +13,7 @@ services:
       - BEHIND_PROXY=true
       - PRODUCTION=true
       - REDIS_HOST=redis
+      - UPLOAD_DIR=/app/uploads
     depends_on:
       redis:
         condition: service_started
