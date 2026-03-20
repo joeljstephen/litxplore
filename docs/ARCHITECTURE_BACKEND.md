@@ -1,7 +1,7 @@
 # LitXplore - Backend Architecture
 
-**Version:** 1.0  
-**Last Updated:** November 2025
+**Version:** 2.0  
+**Last Updated:** March 2026
 
 ---
 
@@ -100,14 +100,18 @@ backend/
 │   │   └── analyzer/
 │   │       ├── at_a_glance.txt       # Fast analysis prompt
 │   │       ├── in_depth.txt          # Detailed analysis prompt
-│   │       ├── key_insights.txt      # Insights extraction prompt
-│   │       └── questions.txt         # Question generation prompt
+│   │       ├── limitations_future_work.txt  # Limitations extraction
+│   │       ├── figure_explanation.txt       # Figure/table analysis
+│   │       └── supported_questions.txt      # Suggested questions
 │   │
 │   ├── utils/                        # Utility functions
-│   │   └── security.py               # Security helpers
+│   │   ├── error_utils.py            # Standardized error responses
+│   │   ├── file_utils.py             # PDF cleanup utilities
+│   │   ├── input_validation.py       # Input sanitization & validation
+│   │   └── user_utils.py             # User get-or-create helper
 │   │
 │   └── templates/                    # HTML/PDF templates
-│       └── review_template.html      # Literature review template
+│       └── document.html             # Literature review Jinja2 template
 │
 ├── uploads/                          # Temporary PDF storage
 ├── scripts/                          # Utility scripts
@@ -164,16 +168,16 @@ GET /api/v1/papers/search?query=transformers
 
 #### 2. Analysis (`/api/v1/analysis`)
 
-| Method | Endpoint                   | Description                   | Auth Required |
-| ------ | -------------------------- | ----------------------------- | ------------- |
-| POST   | `/{paper_id}`              | Generate At-a-Glance analysis | Yes           |
-| POST   | `/{paper_id}/in-depth`     | Generate In-Depth analysis    | Yes           |
-| POST   | `/{paper_id}/key-insights` | Extract Key Insights          | Yes           |
+| Method | Endpoint                | Description                   | Auth Required |
+| ------ | ----------------------- | ----------------------------- | ------------- |
+| POST   | `/{paper_id}/analyze`   | Generate At-a-Glance analysis | Yes           |
+| GET    | `/{paper_id}`           | Get cached analysis           | Yes           |
+| POST   | `/{paper_id}/in-depth`  | Generate In-Depth analysis    | Yes           |
 
 **Example: Analyze Paper**
 
 ```http
-POST /api/v1/analysis/2307.12345
+POST /api/v1/analysis/2307.12345/analyze
 ```
 
 **Response:**
@@ -255,31 +259,38 @@ Content-Type: application/json
 
 #### 5. Documents (`/api/v1/documents`)
 
-| Method | Endpoint    | Description           | Auth Required |
-| ------ | ----------- | --------------------- | ------------- |
-| POST   | `/generate` | Generate PDF document | Yes           |
+| Method | Endpoint    | Description                 | Auth Required |
+| ------ | ----------- | --------------------------- | ------------- |
+| POST   | `/generate` | Generate PDF or LaTeX document | Yes           |
 
 #### 6. Users (`/api/v1/users`)
 
 | Method | Endpoint         | Description              | Auth Required |
 | ------ | ---------------- | ------------------------ | ------------- |
 | GET    | `/me`            | Get current user profile | Yes           |
-| POST   | `/webhook/clerk` | Clerk webhook handler    | No (Webhook)  |
+| POST   | `/webhook/clerk` | Clerk webhook handler    | No (Svix)     |
 
 #### 7. Tasks (`/api/v1/tasks`)
 
-| Method | Endpoint     | Description       | Auth Required |
-| ------ | ------------ | ----------------- | ------------- |
-| GET    | `/{task_id}` | Get task status   | Yes           |
-| GET    | `/`          | List user's tasks | Yes           |
+| Method | Endpoint          | Description       | Auth Required |
+| ------ | ----------------- | ----------------- | ------------- |
+| GET    | `/{task_id}`      | Get task status   | Yes           |
+| GET    | `/`               | List user's tasks | Yes           |
+| POST   | `/{task_id}/cancel` | Cancel a task   | Yes           |
 
-#### 8. Health & Monitoring
+#### 8. History (`/api/v1`)
+
+| Method | Endpoint          | Description            | Auth Required |
+| ------ | ----------------- | ---------------------- | ------------- |
+| POST   | `/clear`          | Clear chat history     | Yes           |
+
+#### 9. Health & Monitoring
 
 | Method | Endpoint              | Description              | Auth Required |
 | ------ | --------------------- | ------------------------ | ------------- |
 | GET    | `/health`             | Health check             | No            |
 | GET    | `/api/v1/healthcheck` | Detailed health check    | No            |
-| GET    | `/db-test`            | Database connection test | No            |
+| GET    | `/db-test`            | Database connection test | No (dev only) |
 
 ---
 
@@ -290,136 +301,122 @@ Content-Type: application/json
 **Responsibilities**:
 
 - Search arXiv papers
-- Handle PDF uploads
-- Download and extract paper content
-- Manage paper metadata
+- Handle PDF uploads with security validation
+- Manage paper metadata and uploaded files
+- Periodic cleanup of old uploads
 
 **Key Methods**:
 
 ```python
 class PaperService:
-    async def search_papers(query: str) -> List[Paper]
-    async def get_paper(paper_id: str) -> Paper
-    async def upload_paper(file: UploadFile) -> dict
-    async def download_paper_pdf(paper_id: str) -> str
-    async def extract_text_from_pdf(pdf_path: str) -> str
+    def search_papers(query: str) -> List[Paper]
+    def get_papers_by_ids(paper_ids: List[str]) -> List[Paper]
+    def process_uploaded_pdf(file: UploadFile) -> Paper
+    def get_uploaded_papers(paper_ids: List[str]) -> List[Paper]
+    def get_paper_metadata(content_hash: str) -> Dict[str, Any]
+    def generate_review(topic: str, papers: List, max_papers: int) -> str
+    @staticmethod
+    def cleanup_old_uploads(max_age_hours: int = 24)
 ```
 
 **PDF Security Validation**:
 
-- File extension check
+- File extension check (`.pdf` only)
 - Size limit (15MB max)
-- PDF header validation
-- Malicious content scanning (13 security markers)
-- Content hash generation
-
-**Malicious Markers Detected**:
-
-```python
-MALICIOUS_MARKERS = [
-    b'/JavaScript', b'/JS', b'/Launch', b'/OpenAction',
-    b'/AA', b'/AcroForm', b'/XFA', b'getAnnots',
-    b'/EmbeddedFile', b'/RichMedia', b'/Flash',
-    b'/GoToE', b'/GoToR', b'/ImportData', b'/SubmitForm',
-    b'/Sound', b'/Movie'
-]
-```
+- PDF header validation (`%PDF`)
+- Malicious content scanning (17 security markers)
+- Content hash generation for deduplication
 
 ### 2. AnalysisService (`analysis_service.py`)
 
 **Responsibilities**:
 
-- Orchestrate paper analysis
-- Manage analysis caching
-- Handle different analysis levels
-- Coordinate with LLM services
+- Orchestrate paper analysis with Redis caching
+- Handle At-a-Glance and In-Depth analysis levels
+- PDF text extraction with page mapping
+- Coordinate with Gemini LLM
 
 **Key Methods**:
 
 ```python
 class AnalysisService:
-    async def analyze_paper(paper_id: str) -> PaperAnalysis
-    async def compute_at_a_glance(paper_text: str) -> AtAGlanceAnalysis
-    async def compute_in_depth(paper_text: str) -> InDepthAnalysis
-    async def compute_key_insights(paper_text: str) -> dict
+    def analyze_paper(paper_id, force_refresh=False, user_id=None) -> PaperAnalysis
+    def get_paper_analysis(paper_id, user_id=None) -> Optional[PaperAnalysis]
+    def compute_in_depth(paper_id, user_id=None) -> PaperAnalysis
+    def _generate_at_a_glance(full_text) -> AtAGlanceAnalysis
+    def _fetch_paper(paper_id) -> tuple[Paper, bytes]
+    def _extract_text_with_pages(pdf_path) -> tuple[str, Dict[int, str]]
 ```
 
 **Analysis Levels**:
 
-1. **At-a-Glance** (Fast - 2-3 seconds)
+1. **At-a-Glance** (Fast)
 
-   - Model: gemini-2.0-flash-lite
-   - Text input: 3,000 characters
-   - Sections: Abstract, methodology, results, limitations
-   - Timeout: 30 seconds
-   - Retries: 2
+   - Model: `gemini-2.0-flash-lite`
+   - Sections: title, authors, affiliations, abstract, keywords, introduction, related_work, problem_statement, methodology, results, discussion, limitations, future_work, conclusion
 
-2. **In-Depth** (Comprehensive - 10-20 seconds)
+2. **In-Depth** (Comprehensive)
 
-   - Model: gemini-2.0-flash
-   - Text input: 15,000 characters
-   - Sections: 8 detailed sections
-   - Timeout: 60 seconds
-   - Retries: 3
+   - Model: `gemini-2.0-flash`
+   - Sections: introduction, related_work, problem_statement, methodology, results, discussion, limitations, conclusion_future_work
 
-3. **Key Insights** (Lazy-loaded - 5-10 seconds)
-   - Model: gemini-2.0-flash
-   - Text input: 10,000 characters
-   - Extracts: Figures, limitations, future work
-   - Timeout: 45 seconds
+**Supporting modules**:
+
+- `analysis_helpers.py` — JSON extraction/parsing, LLM retry with timeout
+- `analysis_resilience.py` — Fallback At-a-Glance generation, text extraction fallbacks
 
 ### 3. LangChainService (`langchain_service.py`)
 
 **Responsibilities**:
 
-- Generate literature reviews
-- Process multiple papers
-- Create vector stores
-- Synthesize findings
+- Generate literature reviews from multiple papers
+- Process and split paper documents
+- Create vector stores for retrieval
+- Synthesize findings with retry logic
 
 **Key Methods**:
 
 ```python
 class LangChainService:
-    async def fetch_papers(topic: str, max_papers: int) -> List[Paper]
-    async def process_papers(papers: List[Paper]) -> List[Dict]
-    async def generate_review(papers: List[Paper], topic: str) -> str
+    def fetch_papers(topic: str, max_papers: int) -> List[Paper]
+    def process_papers(papers: List[Paper]) -> List[Dict]
+    def analyze_paper(text: str) -> str
+    def generate_review(papers: List[Paper], topic: str) -> str
+    def _generate_with_retry(prompt: str, max_retries: int = 3) -> str
 ```
 
 **Processing Pipeline**:
 
-1. **Document Loading**: Download papers from arXiv or filesystem
-2. **Text Splitting**: Recursive character splitting (1000 chars, 200 overlap)
+1. **Document Loading**: Download papers from arXiv or uploaded PDFs
+2. **Text Splitting**: Recursive character splitting (configurable chunk size/overlap)
 3. **Embedding**: Generate embeddings with OpenAI
 4. **Vector Store**: Create FAISS index
-5. **Retrieval**: Find relevant sections per paper
-6. **Synthesis**: Generate comprehensive review with LLM
+5. **Retrieval**: Similarity search for relevant sections
+6. **Synthesis**: Generate review with Gemini (retry with exponential backoff)
 
 ### 4. PaperChatService (`paper_chat.py`)
 
 **Responsibilities**:
 
 - Enable conversational Q&A with papers
-- Manage vector stores for papers
-- Stream AI responses
-- Maintain chat context
+- Process PDFs into FAISS vector stores
+- Stream AI responses via SSE
 
 **Key Methods**:
 
 ```python
 class PaperChatService:
-    async def load_paper(paper_id: str) -> FAISS
-    async def chat(paper_id: str, message: str, history: List) -> AsyncGenerator
-    async def retrieve_relevant_chunks(query: str, vectorstore: FAISS) -> List[str]
+    def _process_pdf_blocking(pdf_path) -> (documents, texts, vectorstore)
+    async def chat_with_paper_stream(paper_id, message) -> AsyncGenerator[Dict, None]
 ```
 
 **Chat Pipeline**:
 
-1. Load paper and create/retrieve vector store
-2. Retrieve relevant chunks using semantic search
-3. Construct prompt with context and chat history
-4. Stream response from Gemini
-5. Return chunks with token streaming
+1. Download/locate paper PDF
+2. Extract text and create FAISS vector store (blocking, run in thread)
+3. Retrieve relevant chunks using similarity search
+4. Stream response from Gemini as SSE events (`{"content": "..."}`)
+5. Frontend proxies SSE through Next.js API route → Vercel AI SDK format
 
 ### 5. DocumentService (`document_service.py`)
 
@@ -441,18 +438,21 @@ class DocumentService:
 
 **Responsibilities**:
 
-- Manage async tasks
-- Track task status
-- Handle long-running operations
+- Manage async review generation tasks
+- Track task status (pending → running → completed/failed)
+- Background execution of long-running operations
 
 **Key Methods**:
 
 ```python
 class TaskService:
-    async def create_task(user_id: int) -> Task
-    async def update_task_status(task_id: str, status: TaskStatus) -> Task
-    async def get_task(task_id: str) -> Task
-    async def get_user_tasks(user_id: int) -> List[Task]
+    def create_task(db, user) -> Task
+    def start_review_generation_task(task_id, paper_ids, topic, max_papers=10)
+    def _execute_review_generation(task_id, paper_ids, topic, max_papers)
+    def get_task_status(db, task_id, user) -> Optional[Task]
+    def get_user_tasks(db, user, status=None, limit=50) -> list[Task]
+    def cancel_task(db, task_id, user) -> bool
+    def to_response(task) -> TaskResponse
 ```
 
 ---
@@ -465,50 +465,69 @@ class TaskService:
 
 ```python
 class Settings(BaseSettings):
-    # API Settings
-    API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "LitXplore API"
+    # API
+    API_V1_STR: str
+    PROJECT_NAME: str
+    BEHIND_PROXY: bool = False
+    PRODUCTION: bool = False
 
-    # Database Settings
-    DATABASE_URL: Optional[str]
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str
-    POSTGRES_PORT: str
-    POSTGRES_DB: str
+    # Upload Management
+    UPLOAD_DIR: Optional[str] = None
+    UPLOAD_CLEANUP_INTERVAL_HOURS: int = 1
+    UPLOAD_MAX_AGE_HOURS: int = 1
 
-    # AI Settings
+    # CORS
+    CORS_ORIGINS: List[str]
+    CORS_ALLOW_CREDENTIALS: bool
+    CORS_ALLOW_METHODS: List[str]
+    CORS_ALLOW_HEADERS: List[str]
+
+    # Database
+    DATABASE_URL: Optional[str] = None
+    POSTGRES_USER: Optional[str] = None
+    POSTGRES_PASSWORD: Optional[str] = None
+    POSTGRES_HOST: Optional[str] = None
+    POSTGRES_PORT: Optional[str] = None
+    POSTGRES_DB: Optional[str] = None
+
+    # AI
     GEMINI_API_KEY: str
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None   # Used for embeddings
     ANALYZER_MODEL_TAG: str = "gemini-2.0-flash"
     ANALYZER_FAST_MODEL_TAG: str = "gemini-2.0-flash-lite"
+    PROMPT_VERSION: str = "1.0.0"
+    ENV: str = "dev"
 
-    # Redis Settings
+    # Redis
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_PASSWORD: str
 
-    # LangChain Settings
-    CHUNK_SIZE: int = 1000
-    CHUNK_OVERLAP: int = 200
-    SIMILARITY_THRESHOLD: float = 0.7
-    MAX_PAPERS: int = 20
+    # LangChain
+    CHUNK_SIZE: int
+    CHUNK_OVERLAP: int
+    SIMILARITY_THRESHOLD: float
+    MAX_PAPERS: int
 
-    # Security Settings
+    # Clerk Authentication
+    CLERK_ISSUER: str
+    CLERK_FRONTEND_API: str
     CLERK_SECRET_KEY: str
+    CLERK_PUBLISHABLE_KEY: str
     CLERK_JWKS_URL: str
     JWT_ALGORITHM: str = "RS256"
+    CLERK_WEBHOOK_SECRET: Optional[str] = None
+    CLERK_AUTHORIZED_PARTIES: List[str] = []
 
     # Rate Limiting
-    RATE_LIMIT_PER_DAY: int = 100
+    RATE_LIMIT_PER_DAY: int
 ```
 
-**Environment Variables**:
+**Configuration**:
 
-- Loaded from `.env` file
-- Type validation with Pydantic
-- Default values for development
-- Cached with `@lru_cache()`
+- Loaded from `.env` file (`case_sensitive=True`, `extra="ignore"`)
+- Type validation with Pydantic `BaseSettings`
+- `get_upload_dir_path()` helper resolves upload directory
 
 ### Database (`db/database.py`)
 
@@ -555,37 +574,27 @@ def get_db():
 
 ### Middleware (`main.py`)
 
-**CORS Middleware**:
+**Middleware stack** (order of addition):
 
-```python
-if not settings.BEHIND_PROXY:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-```
+1. **SlowAPIMiddleware** — Rate limiting via `slowapi`
+2. **BackgroundTaskMiddleware** — Runs background tasks (e.g., `cleanup_pdfs`)
+3. **SecurityHeadersMiddleware** — Adds security headers to all responses:
+   - `X-Content-Type-Options: nosniff`
+   - `X-Frame-Options: DENY`
+   - `X-XSS-Protection: 1; mode=block`
+   - `Referrer-Policy: strict-origin-when-cross-origin`
+   - `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`
+   - `Strict-Transport-Security` (production only)
+4. **CORSMiddleware** — Only when `not settings.BEHIND_PROXY` (Traefik handles CORS in production)
 
-**Rate Limiting**:
+**Startup Events**:
 
-```python
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
-```
+- Periodic upload cleanup scheduled every `UPLOAD_CLEANUP_INTERVAL_HOURS`
+- Initial cleanup run on startup
 
-**Background Tasks**:
+**Static Files**:
 
-```python
-class BackgroundTaskMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        if hasattr(request.state, 'background_tasks'):
-            asyncio.create_task(self._process_background_tasks(...))
-        return response
-```
+- `/uploads` mounted as `StaticFiles` for serving uploaded PDFs
 
 ---
 
@@ -623,10 +632,11 @@ Response
 
 **Structured Prompts** (stored in `/app/prompts/analyzer/`):
 
-1. **at_a_glance.txt**: Fast summary extraction
-2. **in_depth.txt**: Comprehensive section analysis
-3. **key_insights.txt**: Figures and insights extraction
-4. **questions.txt**: Suggested question generation
+1. **at_a_glance.txt**: Fast summary extraction (JSON schema with 14 fields)
+2. **in_depth.txt**: Comprehensive section analysis (8 detailed sections)
+3. **limitations_future_work.txt**: Limitations and future work extraction
+4. **figure_explanation.txt**: Figure/table analysis and explanation
+5. **supported_questions.txt**: Suggested question generation
 
 **Prompt Template Example**:
 
@@ -788,12 +798,12 @@ async def retry_with_exponential_backoff(func, max_retries=3):
 
 ### Fallback Mechanisms
 
-**PDF Extraction Fallbacks**:
+**PDF Extraction Fallbacks** (`analysis_resilience.py`):
 
 1. PyPDF with strict parsing
 2. PyPDF with lenient parsing
 3. Text extraction without images
-4. Manual text extraction
+4. Fallback At-a-Glance generation from raw text
 
 ---
 
