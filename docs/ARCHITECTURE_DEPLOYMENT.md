@@ -1,7 +1,7 @@
 # LitXplore - Deployment Architecture
 
-**Version:** 1.0  
-**Last Updated:** November 2025
+**Version:** 2.0  
+**Last Updated:** March 2026
 
 ---
 
@@ -24,15 +24,15 @@
 
 ## Overview
 
-LitXplore uses a distributed, cloud-native architecture with separate deployments for frontend and backend services. The system is designed for scalability, reliability, and ease of maintenance.
+LitXplore uses a split deployment architecture: the frontend is hosted on **Vercel**, while the backend runs on a **VPS** with Docker, Traefik reverse proxy, and Watchtower for auto-updates.
 
 ### Deployment Philosophy
 
-- **Serverless-First**: Leverage managed services when possible
-- **Infrastructure as Code**: Configuration versioned in Git
-- **Continuous Deployment**: Automated deployments on push
-- **Environment Parity**: Development mirrors production
-- **Observability**: Comprehensive monitoring and logging
+- **Simple VPS Deployment**: One-command `deploy.sh` for backend setup
+- **Container-Based**: Docker + Docker Compose for reproducible deployments
+- **Auto-Updates**: Watchtower watches GHCR for new images and auto-deploys
+- **Continuous Deployment**: GitHub Actions builds and pushes on merge to `main`
+- **TLS Automation**: Traefik handles Let's Encrypt certificates automatically
 
 ---
 
@@ -41,52 +41,58 @@ LitXplore uses a distributed, cloud-native architecture with separate deployment
 ### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                          INTERNET                                │
-└────────────────┬────────────────────────────────────────────────┘
-                 │
-                 │ HTTPS
-                 │
-    ┌────────────▼─────────────┐
-    │     CDN (Vercel Edge)    │
-    │   - Static Assets        │
-    │   - Edge Caching         │
-    │   - DDoS Protection      │
-    └────────────┬─────────────┘
-                 │
-        ┌────────┴────────┐
-        │                 │
-┌───────▼──────┐   ┌──────▼────────────────────────┐
-│   Frontend   │   │       Backend API             │
-│   (Vercel)   │   │   (Cloud Provider)            │
-│              │   │                               │
-│ Next.js 13+  │   │ FastAPI + Uvicorn             │
-│ Static/SSR   │   │ Containerized (Docker)        │
-└──────────────┘   └──────┬────────────────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-┌───────▼──────┐  ┌───────▼──────┐  ┌──────▼──────┐
-│  PostgreSQL  │  │    Redis     │  │  AI APIs    │
-│    (Neon)    │  │  (Cloud/     │  │  - OpenAI   │
-│              │  │   Upstash)   │  │  - Gemini   │
-│ Serverless   │  │              │  │  - arXiv    │
-│ Postgres     │  │  Caching     │  │             │
-└──────────────┘  └──────────────┘  └─────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                        INTERNET                           │
+└───────────┬──────────────────────────────┬───────────────┘
+            │                              │
+            │ HTTPS                        │ HTTPS
+            │                              │
+┌───────────▼──────────┐    ┌──────────────▼──────────────┐
+│   Frontend (Vercel)  │    │   VPS (api.litxplore.win)   │
+│                      │    │                              │
+│   Next.js 15         │    │   ┌─────────────────────┐   │
+│   Standalone SSR     │    │   │ Traefik v3.1        │   │
+│   Edge CDN           │    │   │ - TLS (ACME)        │   │
+│                      │    │   │ - Rate Limiting      │   │
+└──────────────────────┘    │   │ - CORS               │   │
+                            │   └──────────┬──────────┘   │
+                            │              │               │
+                            │   ┌──────────▼──────────┐   │
+                            │   │ FastAPI (Docker)     │   │
+                            │   │ python:3.12-slim     │   │
+                            │   └──────────┬──────────┘   │
+                            │              │               │
+                            │   ┌──────────▼──────────┐   │
+                            │   │ Redis 7 (Docker)     │   │
+                            │   └─────────────────────┘   │
+                            │                              │
+                            │   Watchtower (auto-updates)  │
+                            └──────────────────────────────┘
+                                           │
+                    ┌──────────────────────┼──────────────┐
+                    │                      │              │
+           ┌────────▼──────┐    ┌──────────▼──┐   ┌──────▼──────┐
+           │  PostgreSQL   │    │  AI APIs     │   │  Clerk      │
+           │  (Neon)       │    │  - Gemini    │   │  Auth       │
+           │  Serverless   │    │  - OpenAI    │   │             │
+           └───────────────┘    │  - arXiv     │   └─────────────┘
+                                └──────────────┘
 ```
 
 ### Component Responsibilities
 
-| Component      | Technology      | Purpose             | Provider       |
-| -------------- | --------------- | ------------------- | -------------- |
-| **Frontend**   | Next.js         | UI/UX, Client Logic | Vercel         |
-| **Backend**    | FastAPI         | API, Business Logic | AWS/GCP/Render |
-| **Database**   | PostgreSQL      | Data Persistence    | Neon           |
-| **Cache**      | Redis           | Performance Cache   | Upstash/Cloud  |
-| **Auth**       | Clerk           | User Authentication | Clerk          |
-| **AI/ML**      | Gemini + OpenAI | Analysis & Chat     | Google/OpenAI  |
-| **Storage**    | File System     | PDF Uploads         | Backend Host   |
-| **Monitoring** | Sentry + Custom | Error Tracking      | Sentry         |
+| Component       | Technology        | Purpose             | Provider       |
+| --------------- | ----------------- | ------------------- | -------------- |
+| **Frontend**    | Next.js 15        | UI/UX, Client Logic | Vercel         |
+| **Reverse Proxy** | Traefik v3.1   | TLS, Rate Limiting  | VPS (Docker)   |
+| **Backend**     | FastAPI           | API, Business Logic | VPS (Docker)   |
+| **Database**    | PostgreSQL        | Data Persistence    | Neon           |
+| **Cache**       | Redis 7           | Analysis Caching    | VPS (Docker)   |
+| **Auth**        | Clerk             | User Authentication | Clerk          |
+| **AI/ML**       | Gemini + OpenAI   | Analysis & Chat     | Google/OpenAI  |
+| **Auto-Deploy** | Watchtower        | Container Updates   | VPS (Docker)   |
+| **CI/CD**       | GitHub Actions    | Build & Push        | GitHub         |
+| **Registry**    | GHCR              | Container Images    | GitHub         |
 
 ---
 
@@ -130,52 +136,29 @@ PRODUCTION=false
 ENV=dev
 ```
 
-#### 2. Staging
-
-**Purpose**: Pre-production testing and QA
-
-**Infrastructure**:
-
-- Frontend: Vercel preview deployment
-- Backend: Staging server/container
-- Database: Neon staging branch
-- Redis: Dedicated staging instance
-
-**Configuration**:
-
-```bash
-# Frontend
-NEXT_PUBLIC_API_URL=https://api-staging.litxplore.com
-NEXT_PUBLIC_ENV=staging
-
-# Backend
-DATABASE_URL=postgresql://neon-staging.../litxplore_staging
-PRODUCTION=false
-ENV=staging
-```
-
-#### 3. Production
+#### 2. Production
 
 **Purpose**: Live user-facing application
 
 **Infrastructure**:
 
-- Frontend: Vercel production (litxplore.com)
-- Backend: Production server/container cluster
+- Frontend: Vercel (auto-deployed from `main`)
+- Backend: VPS with Docker + Traefik (auto-deployed via Watchtower)
 - Database: Neon production
-- Redis: Production cluster
+- Redis: Self-hosted in Docker on VPS
 
 **Configuration**:
 
 ```bash
-# Frontend
-NEXT_PUBLIC_API_URL=https://api.litxplore.com
-NEXT_PUBLIC_ENV=production
+# Frontend (Vercel)
+NEXT_PUBLIC_API_URL=https://api.litxplore.win
+NEXT_PUBLIC_API_BASE_URL=https://api.litxplore.win/api/v1
 
-# Backend
-DATABASE_URL=postgresql://neon-prod.../litxplore_prod
+# Backend (.env on VPS)
+DATABASE_URL=postgresql://...@neon.tech/litxplore?sslmode=require
 PRODUCTION=true
 ENV=prod
+BEHIND_PROXY=true
 ```
 
 ---
@@ -184,267 +167,115 @@ ENV=prod
 
 ### Vercel Deployment
 
-**Platform**: Vercel (recommended for Next.js)
+**Platform**: Vercel (optimized for Next.js)
 
 **Deployment Trigger**:
 
 - **Production**: Push to `main` branch
 - **Preview**: Pull requests and other branches
 
-**Build Configuration**:
-
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "framework": "nextjs"
-}
-```
-
 **Environment Variables** (Vercel Dashboard):
 
 ```bash
-# Public (exposed to browser)
-NEXT_PUBLIC_API_URL=https://api.litxplore.com
+NEXT_PUBLIC_API_URL=https://api.litxplore.win
+NEXT_PUBLIC_API_BASE_URL=https://api.litxplore.win/api/v1
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxx
-
-# Secret (server-side only)
 CLERK_SECRET_KEY=sk_live_xxx
 ```
 
-### Build Process
+**Build**: `npm install` → `npm run build` (standalone output)
 
-```bash
-# 1. Install dependencies
-npm install
+**Features**:
 
-# 2. Sync OpenAPI spec from backend
-npm run sync:openapi
-
-# 3. Generate API client
-npm run generate:api
-
-# 4. Build Next.js application
-npm run build
-
-# 5. Output: .next/ directory (standalone mode)
-```
-
-### Optimization Features
-
-**Vercel Edge Features**:
-
-- **Edge Network**: Global CDN for static assets
-- **Image Optimization**: Automatic WebP/AVIF conversion
-- **Edge Functions**: Middleware and API routes on the edge
-- **Analytics**: Performance monitoring
-
-**Next.js Optimizations**:
-
-- **Static Generation**: Pre-render pages at build time
-- **Incremental Static Regeneration**: Update static pages
-- **Code Splitting**: Automatic route-based splitting
-- **Tree Shaking**: Remove unused code
-
-### Custom Domain
-
-```
-litxplore.com → Vercel
-  ├── www.litxplore.com (redirect)
-  ├── app.litxplore.com (main app)
-  └── *.vercel.app (preview deployments)
-```
-
-**DNS Configuration**:
-
-```
-A     @              76.76.21.21
-CNAME www            cname.vercel-dns.com
-CNAME app            cname.vercel-dns.com
-```
+- Global edge CDN for static assets
+- Automatic image optimization
+- Route-based code splitting
+- Preview deployments on PRs
 
 ---
 
 ## Backend Deployment
 
-### Deployment Options
+### Docker Setup
 
-#### Option 1: Docker Container (Recommended)
+**Dockerfile** (`backend/Dockerfile`):
 
-**Dockerfile**:
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application
-COPY ./app ./app
-COPY alembic.ini .
-COPY alembic ./alembic
-
-# Expose port
-EXPOSE 8000
-
-# Run migrations and start server
-CMD alembic upgrade head && \
-    uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+- Multi-stage build: builder + final
+- Base image: `python:3.12-slim`
+- Installs PyTorch (CPU) and all requirements in a virtual environment
+- Runs as non-root user `appuser` (uid 1000)
+- Entrypoint: `docker-entrypoint.sh` (runs Alembic migrations, then starts Uvicorn)
 
 **docker-compose.yml** (Development):
 
 ```yaml
-version: "3.8"
-
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: litxplore_backend
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+    build: .
+    container_name: litxplore_backend_dev
+    ports: ["8000:8000"]
+    env_file: .env
     environment:
-      - DOCKER_ENV=true
-      - REDIS_HOST=redis
-    depends_on:
-      - redis
+      DOCKER_ENV: "true"
+      BEHIND_PROXY: "false"
+      PRODUCTION: "false"
+      REDIS_HOST: redis
+      UPLOAD_DIR: /app/uploads
+    depends_on: [redis]
     volumes:
       - ./uploads:/app/uploads
-    restart: unless-stopped
-    networks:
-      - litxplore-network
+      - ./app:/app/app     # Hot reload in dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   redis:
     image: redis:7-alpine
-    container_name: litxplore_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - litxplore-network
-
-volumes:
-  redis_data:
-
-networks:
-  litxplore-network:
-    driver: bridge
+    container_name: litxplore_redis_dev
+    ports: ["6380:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
 ```
 
-#### Option 2: Platform as a Service
+### Production Setup (VPS + Traefik)
 
-**Render.com**:
+**Root `docker-compose.override.yml`** adds:
 
-```yaml
-# render.yaml
-services:
-  - type: web
-    name: litxplore-api
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_HOST
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-```
+- **Traefik v3.1** — Reverse proxy with automatic TLS (Let's Encrypt ACME)
+  - HTTP → HTTPS redirect
+  - Trusted IPs for Cloudflare
+  - Rate limiting via middleware:
+    - General: 100 req/min, burst 50
+    - Auth routes: 10 req/min, burst 5
+    - Upload/review routes: 5 req/min, burst 2
 
-**Heroku**:
-
-```yaml
-# Procfile
-web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-release: alembic upgrade head
-```
-
-#### Option 3: Cloud Provider (AWS/GCP)
-
-**AWS Elastic Beanstalk**:
-
-- Docker container deployment
-- Auto-scaling based on load
-- Load balancer integration
-
-**Google Cloud Run**:
-
-- Serverless container platform
-- Automatic scaling to zero
-- Pay per request
+- **Watchtower** — Monitors GHCR for new images, auto-pulls and restarts (`--interval 300`, `--rolling-restart`)
 
 ### Environment Variables
 
-**Required Variables**:
-
 ```bash
-# Database
 DATABASE_URL=postgresql://user:pass@host/db
-
-# Redis
-REDIS_HOST=redis.host.com
+REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=xxx
-
-# API Keys
 GEMINI_API_KEY=xxx
 OPENAI_API_KEY=xxx
-
-# Clerk
 CLERK_SECRET_KEY=sk_live_xxx
 CLERK_JWKS_URL=https://clerk.app/.well-known/jwks.json
-
-# Configuration
 PRODUCTION=true
 ENV=prod
-BEHIND_PROXY=false
-CORS_ORIGINS=["https://litxplore.com"]
+BEHIND_PROXY=true
+CORS_ORIGINS=["https://litxplore.vercel.app"]
 ```
 
 ### Health Checks
 
-**Endpoints**:
-
-```python
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "LitXplore API"}
-
-@app.get("/api/v1/healthcheck")
-def detailed_health_check():
-    # Check database
-    # Check Redis
-    # Check external APIs
-    return {
-        "status": "healthy",
-        "database": "connected",
-        "redis": "connected",
-        "timestamp": datetime.utcnow()
-    }
-```
-
-**Configuration**:
-
-```yaml
-# Docker healthcheck
-healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
-```
+- `GET /health` — Basic health check
+- `GET /api/v1/healthcheck` — Detailed health check
+- `GET /db-test` — Database connection test (non-production only)
 
 ---
 
@@ -528,70 +359,32 @@ psql $DATABASE_URL < backup.sql
 
 ### Redis Deployment
 
-#### Option 1: Upstash (Recommended)
-
-**Features**:
-
-- Serverless Redis
-- Global edge caching
-- Pay per request
-- REST API available
-
-**Configuration**:
-
-```bash
-REDIS_HOST=xxx.upstash.io
-REDIS_PORT=6379
-REDIS_PASSWORD=xxx
-```
-
-#### Option 2: Redis Cloud
-
-**Features**:
-
-- Managed Redis cluster
-- High availability
-- Auto-scaling
-- Multi-zone deployment
-
-#### Option 3: Self-Hosted
-
-**Docker Compose**:
+Redis runs as a **self-hosted Docker container** alongside the backend:
 
 ```yaml
 redis:
   image: redis:7-alpine
-  command: redis-server --requirepass ${REDIS_PASSWORD}
   volumes:
     - redis_data:/data
-  ports:
-    - "6379:6379"
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
 ```
 
 ### Cache Configuration
 
 **TTL Settings**:
 
-```python
-# Development
-CACHE_TTL_DEV = 3600  # 1 hour
-
-# Production
-CACHE_TTL_PROD = 86400  # 24 hours
-```
+- Development: 3600s (1 hour)
+- Production: 86400s (24 hours)
 
 **Cache Keys**:
 
 ```python
-# Analysis results
-f"analysis:{paper_id}:v{VERSION}:{ENV}"
-
-# Search results
-f"search:{query_hash}:v{VERSION}"
-
-# Vector stores
-f"vectorstore:{paper_id}"
+f"analysis:{paper_id}:v{PROMPT_VERSION}:{ENV}"
+f"in_depth:{paper_id}:v{PROMPT_VERSION}:{ENV}"
 ```
+
+Version-based keys ensure stale data is automatically invalidated when prompts change.
 
 ---
 
@@ -599,128 +392,46 @@ f"vectorstore:{paper_id}"
 
 ### GitHub Actions Workflow
 
-**Frontend** (`.github/workflows/frontend.yml`):
+**Frontend**: Deployed automatically by Vercel on push to `main` (no custom workflow needed).
+
+**Backend** (`.github/workflows/deploy-backend.yml`):
 
 ```yaml
-name: Frontend CI/CD
+name: Build and Deploy Backend
 
 on:
   push:
-    branches: [main, develop]
-    paths:
-      - "frontend/**"
-  pull_request:
     branches: [main]
+    paths: ["backend/**"]
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ./frontend
-
-      - name: Lint
-        run: npm run lint
-        working-directory: ./frontend
-
-      - name: Build
-        run: npm run build
-        working-directory: ./frontend
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.API_URL }}
-
-      - name: Deploy to Vercel
-        if: github.ref == 'refs/heads/main'
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - Checkout code
+      - Set up Docker Buildx
+      - Login to ghcr.io
+      - Docker metadata (tags: branch, sha, latest)
+      - Build and push to ghcr.io/{owner}/litxplore-backend
+        - Platform: linux/amd64
+        - GitHub Actions cache
 ```
 
-**Backend** (`.github/workflows/backend.yml`):
+**Auto-deployment flow**:
 
-```yaml
-name: Backend CI/CD
+1. Developer pushes to `main` (backend changes)
+2. GitHub Actions builds Docker image → pushes to GHCR
+3. Watchtower on VPS detects new image within ~5 minutes
+4. Watchtower pulls new image and does rolling restart
 
-on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "backend/**"
+### Deployment Flow
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
-        working-directory: ./backend
-
-      - name: Run tests
-        run: pytest
-        working-directory: ./backend
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: docker build -t litxplore-api .
-        working-directory: ./backend
-
-      - name: Push to registry
-        run: |
-          docker tag litxplore-api registry.example.com/litxplore-api:latest
-          docker push registry.example.com/litxplore-api:latest
-
-      - name: Deploy to production
-        run: |
-          # Deploy commands (depends on hosting provider)
-          kubectl rollout restart deployment/litxplore-api
-```
-
-### Deployment Checklist
-
-**Pre-Deployment**:
-
-- [ ] All tests passing
-- [ ] Code reviewed and approved
-- [ ] Database migrations prepared
-- [ ] Environment variables configured
-- [ ] Backup created
-
-**Deployment**:
-
-- [ ] Deploy backend first (API backward compatible)
-- [ ] Run database migrations
-- [ ] Verify health checks
-- [ ] Deploy frontend
-- [ ] Monitor error rates
-
-**Post-Deployment**:
-
-- [ ] Smoke tests passed
-- [ ] Performance metrics normal
-- [ ] Error rates acceptable
-- [ ] User feedback reviewed
+1. **Merge PR to `main`**
+2. **Backend**: GitHub Actions builds image → GHCR → Watchtower auto-deploys within ~5 min
+3. **Frontend**: Vercel auto-deploys from `main` branch
+4. **Migrations**: `docker-entrypoint.sh` runs `alembic upgrade head` on container start
+5. **Verify**: Check `https://api.litxplore.win/health`
 
 ---
 
@@ -834,162 +545,60 @@ alerts:
 
 ### SSL/TLS
 
-**Frontend**:
+**Frontend**: Automatic HTTPS via Vercel (TLS 1.3, HSTS).
 
-- Automatic HTTPS via Vercel
-- TLS 1.3 supported
-- HSTS enabled
-
-**Backend**:
-
-- SSL termination at load balancer
-- Internal communication encrypted
-- Certificate auto-renewal
+**Backend**: Traefik handles TLS termination with Let's Encrypt ACME (auto-renewal). HTTP automatically redirected to HTTPS.
 
 ### API Security
 
-**Rate Limiting**:
+**Rate Limiting** (Traefik middleware in production):
 
-```python
-from slowapi import Limiter
+- General: 100 req/min, burst 50
+- Auth routes: 10 req/min, burst 5
+- Upload/review routes: 5 req/min, burst 2
+- SlowAPI middleware as fallback in development
 
-limiter = Limiter(key_func=get_remote_address)
+**Security Headers** (FastAPI middleware):
 
-@router.post("/generate-review")
-@limiter.limit("10/day")
-async def generate_review(...):
-    pass
-```
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Strict-Transport-Security` (production)
+- `Content-Security-Policy: default-src 'none'`
 
-**CORS**:
+**CORS**: Handled by Traefik dynamic config in production; FastAPI CORSMiddleware in development.
 
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://litxplore.com"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
-```
+**Authentication**: JWT tokens via Clerk, verified with JWKS on every protected request.
 
-**Authentication**:
-
-- JWT tokens via Clerk
-- Token verification on every request
-- Short-lived tokens (1 hour)
+**Firewall**: `deploy.sh` configures UFW (SSH, 80, 443 only) and fail2ban.
 
 ### Data Security
 
-**At Rest**:
-
-- Database encryption (Neon default)
-- File system encryption
-- Environment variable encryption
-
-**In Transit**:
-
-- HTTPS/TLS for all communications
-- API key headers only over HTTPS
-- Database connections over SSL
-
-### Compliance
-
-**GDPR**:
-
-- User data export capability
-- Right to deletion
-- Privacy policy
-- Cookie consent
-
-**Data Retention**:
-
-- User data: Retained until account deletion
-- Logs: 90 days
-- Backups: 7 days
+- Database connections over SSL (`sslmode=require`)
+- All external API calls over HTTPS
+- PDF uploads scanned for malicious content (17 security markers)
+- Uploaded files auto-cleaned after configurable max age
 
 ---
 
 ## Scaling Strategy
 
-### Horizontal Scaling
+### Current Architecture
 
-**Frontend (Vercel)**:
+**Frontend (Vercel)**: Automatic edge scaling, global CDN distribution.
 
-- Automatic edge scaling
-- No configuration needed
-- Global distribution
+**Backend (Single VPS)**:
 
-**Backend**:
+- Single Docker container with Traefik load balancing
+- Rate limiting prevents abuse (100 req/min general, 10 req/min auth, 5 req/min uploads)
+- Redis caching reduces redundant AI API calls by 60-70%
+- Connection pooling for database (pool_size=5, max_overflow=10)
 
-```yaml
-# Kubernetes deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: litxplore-api
-spec:
-  replicas: 3 # Horizontal scaling
-  strategy:
-    type: RollingUpdate
-  template:
-    spec:
-      containers:
-        - name: api
-          image: litxplore-api:latest
-          resources:
-            requests:
-              cpu: 500m
-              memory: 512Mi
-            limits:
-              cpu: 1000m
-              memory: 1Gi
-```
+### Future Scaling Options
 
-**Auto-Scaling**:
-
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: litxplore-api-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: litxplore-api
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-```
-
-### Vertical Scaling
-
-**Database**:
-
-- Neon: Automatic compute scaling
-- Increase connection pool size
-- Optimize queries
-
-**Cache**:
-
-- Increase Redis memory
-- Add read replicas
-- Implement cache sharding
-
-### Load Balancing
-
-```
-Internet → Load Balancer → [Backend Instance 1, 2, 3]
-                         → Health Checks
-                         → Sticky Sessions (if needed)
-```
+- **Horizontal**: Add more VPS instances behind a load balancer
+- **Database**: Neon auto-scales compute; increase connection pool as needed
+- **Cache**: Redis can be moved to a managed service (Upstash, Redis Cloud) for higher availability
 
 ---
 
@@ -1052,47 +661,22 @@ Internet → Load Balancer → [Backend Instance 1, 2, 3]
 
 ### Current Cost Structure
 
-**Frontend (Vercel)**:
-
-- Free tier: $0/month
-- Pro tier: $20/month
-- Bandwidth: Included in tier
-
-**Backend (Render/AWS)**:
-
-- Basic: $7-25/month
-- Professional: $50-200/month
-- Depends on traffic
-
-**Database (Neon)**:
-
-- Free tier: $0/month (1GB)
-- Pro tier: $19/month (10GB)
-- Storage: $0.12/GB/month
-
-**Redis (Upstash)**:
-
-- Free tier: $0/month (10K commands/day)
-- Pro tier: $10-50/month
-
-**AI APIs**:
-
-- OpenAI: ~$0.0001/1K tokens
-- Gemini: ~$0.00025-0.0005/1K tokens
-- Estimated: $50-200/month
-
-**Total Estimated**:
-
-- Development: $0-50/month
-- Production: $100-500/month (depending on scale)
+| Component | Cost | Notes |
+| --- | --- | --- |
+| Frontend (Vercel) | Free–$20/mo | Free tier sufficient for moderate traffic |
+| Backend (VPS) | ~$5–25/mo | Single VPS with Docker |
+| Database (Neon) | Free–$19/mo | Serverless PostgreSQL |
+| Redis | $0 | Self-hosted in Docker on VPS |
+| AI APIs | ~$50–200/mo | Gemini (analysis/chat) + OpenAI (embeddings) |
+| Domain | ~$10/yr | `litxplore.win` |
 
 ### Optimization Strategies
 
-1. **Caching**: Reduce AI API calls by 60-70%
-2. **Fast Models**: Use lite models for quick operations
-3. **Lazy Loading**: Only compute when needed
-4. **Connection Pooling**: Reuse database connections
-5. **CDN**: Cache static assets globally
+1. **Redis caching**: Reduces AI API calls by 60-70%
+2. **Fast models**: `gemini-2.0-flash-lite` for At-a-Glance (cheaper, faster)
+3. **Lazy loading**: In-Depth analysis only computed on demand
+4. **Upload cleanup**: Automatic deletion of old PDFs to save disk space
+5. **Standalone output**: Minimal Next.js build reduces Vercel bandwidth
 
 ---
 

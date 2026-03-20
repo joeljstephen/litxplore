@@ -1,7 +1,7 @@
 # LitXplore - Database Architecture
 
-**Version:** 1.0  
-**Last Updated:** November 2025
+**Version:** 2.0  
+**Last Updated:** March 2026
 
 ---
 
@@ -379,11 +379,12 @@ keys = generic
 
 **Existing Migrations**:
 
-1. `74f32592cfec_initial_migration.py` - Initial schema
-2. `b9c1403e0770_add_user_model.py` - Add User table
-3. `39f6942a01f0_update_user_model_for_clerk_integration.py` - Clerk fields
-4. `aaf2ade1b6fd_new_review_history.py` - Review table
-5. `create_simplified_tasks_table.py` - Task tracking
+1. `74f32592cfec_initial_migration.py` — Initial schema (users, literature_reviews)
+2. `b9c1403e0770_add_user_model.py` — No-op
+3. `f1f6d0752b51_add_user_model.py` — No-op
+4. `39f6942a01f0_update_user_model_for_clerk_integration.py` — Clerk fields
+5. `aaf2ade1b6fd_new_review_history.py` — No-op
+6. `create_simplified_tasks_table.py` — Task tracking with TaskStatus enum
 
 **Migration Commands**:
 
@@ -404,42 +405,16 @@ alembic history
 alembic current
 ```
 
-### Example Migration
+### Migration History
 
-**File**: `alembic/versions/xxx_add_user_subscription.py`
-
-```python
-"""Add user subscription fields
-
-Revision ID: xxx
-Revises: yyy
-Create Date: 2025-11-23
-"""
-from alembic import op
-import sqlalchemy as sa
-
-# revision identifiers
-revision = 'xxx'
-down_revision = 'yyy'
-branch_labels = None
-depends_on = None
-
-def upgrade() -> None:
-    op.add_column('users',
-        sa.Column('subscription_tier', sa.String(50), nullable=True)
-    )
-    op.add_column('users',
-        sa.Column('subscription_status', sa.String(50), nullable=True)
-    )
-    op.add_column('users',
-        sa.Column('stripe_customer_id', sa.String(255), nullable=True)
-    )
-
-def downgrade() -> None:
-    op.drop_column('users', 'stripe_customer_id')
-    op.drop_column('users', 'subscription_status')
-    op.drop_column('users', 'subscription_tier')
-```
+| Revision | Description |
+| --- | --- |
+| `74f32592cfec` | Initial migration — users, literature_reviews tables |
+| `b9c1403e0770` | Add user model (no-op) |
+| `f1f6d0752b51` | Add user model (no-op) |
+| `39f6942a01f0` | Clerk integration — add clerk_id, first_name, last_name; drop hashed_password, full_name |
+| `aaf2ade1b6fd` | New review history (no-op) |
+| `create_simplified_tasks_table` | Tasks table with TaskStatus enum |
 
 ---
 
@@ -746,7 +721,7 @@ reviews = db.query(Review)\
 **PII Protection**:
 
 - Email addresses encrypted in transit (SSL)
-- No credit card data stored (Stripe handles payments)
+- No sensitive payment data stored
 
 ---
 
@@ -858,29 +833,23 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 ### Planned Features
 
-1. **Subscription Management**:
-
-   - Add `subscription_tier`, `subscription_status` to User
-   - Create `Subscription` table for history
-
-2. **Paper Bookmarks**:
+1. **Paper Bookmarks**:
 
    - Create `Bookmark` table
    - Many-to-Many with User and Paper
 
-3. **Collaboration**:
+2. **Collaboration**:
 
    - Add `SharedReview` table
    - Team workspaces
 
-4. **Analytics**:
+3. **Analytics**:
 
    - Create `UserActivity` table
    - Track usage patterns
 
-5. **Full-Text Search**:
+4. **Full-Text Search**:
    - PostgreSQL FTS on review content
-   - Elasticsearch integration (optional)
 
 ---
 

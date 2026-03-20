@@ -1,7 +1,7 @@
 # LitXplore - System Architecture Overview
 
-**Version:** 1.0  
-**Last Updated:** November 2025  
+**Version:** 2.0  
+**Last Updated:** March 2026  
 **Status:** Production Ready
 
 ---
@@ -42,7 +42,7 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT TIER                           │
 │  ┌────────────────────────────────────────────────────┐    │
-│  │   Next.js 13+ Frontend (React + TypeScript)        │    │
+│  │   Next.js 15 Frontend (React + TypeScript)          │    │
 │  │   - UI Components (shadcn/ui + Tailwind CSS)       │    │
 │  │   - State Management (Zustand + React Query)       │    │
 │  │   - Authentication (Clerk)                          │    │
@@ -88,7 +88,7 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 
 | Category              | Technology      | Version | Purpose                          |
 | --------------------- | --------------- | ------- | -------------------------------- |
-| **Framework**         | Next.js         | 14.2.33 | React framework with App Router  |
+| **Framework**         | Next.js         | 15.5.12 | React framework with App Router  |
 | **Language**          | TypeScript      | 5.2.2   | Type-safe development            |
 | **UI Framework**      | React           | 18.2.0  | Component-based UI               |
 | **Styling**           | Tailwind CSS    | 3.3.3   | Utility-first CSS                |
@@ -96,7 +96,7 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 | **State Management**  | Zustand         | 5.0.3   | Lightweight state management     |
 | **Data Fetching**     | React Query     | 5.28.4  | Server state management          |
 | **Authentication**    | Clerk           | 6.33.4  | User authentication & management |
-| **AI Integration**    | Vercel AI SDK   | 3.4.33  | Streaming AI responses           |
+| **AI Integration**    | Vercel AI SDK   | 5.0.115 | Streaming AI responses           |
 | **Markdown**          | React Markdown  | 9.0.3   | Markdown rendering with plugins  |
 | **Animations**        | Framer Motion   | 11.18.2 | Declarative animations           |
 | **Forms**             | React Hook Form | 7.54.2  | Form validation with Zod         |
@@ -107,7 +107,7 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 | Category            | Technology          | Version | Purpose                              |
 | ------------------- | ------------------- | ------- | ------------------------------------ |
 | **Framework**       | FastAPI             | Latest  | High-performance async API framework |
-| **Language**        | Python              | 3.9+    | Backend programming language         |
+| **Language**        | Python              | 3.12    | Backend programming language         |
 | **ASGI Server**     | Uvicorn             | 0.24.0+ | ASGI web server                      |
 | **ORM**             | SQLAlchemy          | 2.0.0+  | Database ORM                         |
 | **Database Driver** | psycopg2-binary     | 2.9.9+  | PostgreSQL adapter                   |
@@ -135,7 +135,7 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 | **Cache**            | Redis                              | Session cache, API response cache |
 | **Storage**          | Local file system                  | Temporary PDF uploads             |
 | **Containerization** | Docker                             | Backend containerization          |
-| **Deployment**       | Vercel (Frontend), Cloud (Backend) | Production hosting                |
+| **Deployment**       | Vercel (Frontend), VPS + Docker (Backend) | Production hosting           |
 
 ---
 
@@ -147,19 +147,19 @@ LitXplore follows a **three-tier architecture** with clear separation of concern
 
 **Key Directories**:
 
-- `/src/app` - Next.js pages and routes (App Router)
-- `/src/components` - Reusable React components
-- `/src/hooks` - Custom React hooks
-- `/src/lib` - Utilities, API clients, types, stores
+- `/src/app` - Next.js 15 pages and routes (App Router)
+- `/src/components` - Reusable React components (analyzer, auth, ui)
+- `/src/hooks` - Custom React hooks (analysis, debounce, chat, toast)
+- `/src/lib` - Utilities, API clients, types, Zustand stores
 
 **Core Features**:
 
 - Paper search interface with real-time results
-- Interactive paper analyzer with multiple analysis tabs
+- Interactive paper analyzer with multiple analysis tabs (At-a-Glance, In-Depth, Chat)
 - AI-powered chat interface with streaming responses
-- Literature review generation workflow
-- User authentication and profile management
-- Review history management
+- Literature review generation with async task polling
+- User authentication and profile management via Clerk
+- Review history management with save/delete/export
 
 ### 2. Backend API (`/backend`)
 
@@ -416,7 +416,7 @@ Frontend redirects to analyzer
 - Clerk-based authentication
 - JWT token verification
 - User profile management
-- Subscription tracking (planned: Stripe integration)
+- Review history management
 
 ---
 
@@ -479,6 +479,7 @@ For detailed information on specific components, please refer to:
 - **[Frontend Architecture](./ARCHITECTURE_FRONTEND.md)** - Frontend components, hooks, and state management
 - **[Database Schema](./ARCHITECTURE_DATABASE.md)** - Database models, relationships, and migrations
 - **[Deployment Guide](./ARCHITECTURE_DEPLOYMENT.md)** - Infrastructure, deployment, and operations
+- **[Simple Deploy](./SIMPLE_DEPLOY.md)** - One-command VPS deployment
 
 ---
 
@@ -496,7 +497,7 @@ For detailed information on specific components, please refer to:
 ┌────────────────────────────────▼────────────────────────────────────────┐
 │                      PRESENTATION LAYER (Frontend)                       │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  Next.js Application (Vercel)                                     │ │
+│  │  Next.js 15 Application (Vercel)                                   │ │
 │  │  ┌────────────┐ ┌────────────┐ ┌─────────────┐ ┌──────────────┐ │ │
 │  │  │   Pages    │ │ Components │ │    Hooks    │ │    Stores    │ │ │
 │  │  │  (Routes)  │ │    (UI)    │ │  (Logic)    │ │   (State)    │ │ │
@@ -542,7 +543,7 @@ For detailed information on specific components, please refer to:
 └────────────────┘  └────────────────┘  │  └───────────────────────────┘ │
                                         │  ┌───────────────────────────┐ │
                                         │  │  External APIs            │ │
-                                        │  │  arXiv │ Clerk │ Stripe   │ │
+                                        │  │  arXiv │ Clerk            │ │
                                         │  └───────────────────────────┘ │
                                         └────────────────────────────────┘
 ```
