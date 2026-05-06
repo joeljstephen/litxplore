@@ -18,7 +18,7 @@
   "dependencies": {
     "@ai-sdk/google": "^2.0.23",
     "@ai-sdk/react": "^2.0.117",
-    "@clerk/nextjs": "^6.33.4",
+    "@clerk/nextjs": "^6.39.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^3.9.0",
@@ -60,7 +60,7 @@
     "@types/three": "^0.171.0",
     "ai": "^5.0.115",
     "autoprefixer": "10.4.15",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -71,11 +71,11 @@
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
     "mini-svg-data-uri": "^1.4.4",
-    "next": "^15.5.12",
+    "next": "^15.5.13",
     "next-themes": "^0.3.0",
     "openai": "^4.85.1",
     "orval": "^8.4.2",
-    "postcss": "8.4.31",
+    "postcss": "^8.5.10",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",
@@ -111,12 +111,30 @@
   },
   "overrides": {
     "@scalar/openapi-parser": {
-      "ajv": "^8.18.0"
+      "ajv": "^8.18.0",
+      "yaml": "^2.8.3"
+    },
+    "@scalar/json-magic": {
+      "yaml": "^2.8.3"
     },
     "ajv-formats": {
       "ajv": "^8.18.0"
     },
     "markdown-it": "^14.1.1",
-    "minimatch": "^10.2.2"
+    "minimatch": "^10.2.3",
+    "flatted": "^3.4.2",
+    "picomatch": "^4.0.4",
+    "yaml": "^1.10.3",
+    "brace-expansion": "^5.0.5",
+    "lodash": "^4.18.0",
+    "follow-redirects": "^1.16.0",
+    "postcss-load-config": {
+      "yaml": "^2.8.3"
+    },
+    "postcss": "^8.5.10",
+    "ajv": "^6.14.0",
+    "typedoc": {
+      "yaml": "^2.8.3"
+    }
   }
 }
