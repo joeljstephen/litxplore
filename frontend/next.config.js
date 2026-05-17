@@ -2,13 +2,11 @@
 const nextConfig = {
     output: 'standalone',
     reactStrictMode: true,
+    turbopack: {},
     images: {
-        domains: ['arxiv.org'],
-    },
-    webpack: (config, { isServer }) => {
-        // Add optimizations if needed
-        config.cache = false; // Disable webpack cache temporarily
-        return config;
+        remotePatterns: [
+            { protocol: 'https', hostname: 'arxiv.org' },
+        ],
     },
     async headers() {
         return [
