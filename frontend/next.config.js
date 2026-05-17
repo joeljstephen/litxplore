@@ -3,6 +3,7 @@ const nextConfig = {
     output: 'standalone',
     reactStrictMode: true,
     turbopack: {},
+    skipTrailingSlashRedirect: true,
     images: {
         remotePatterns: [
             { protocol: 'https', hostname: 'arxiv.org' },

@@ -59,7 +59,7 @@ export default function SignUpComponent() {
           },
         },
       }}
-      redirectUrl={redirectUrl}
+      forceRedirectUrl={redirectUrl}
     />
   );
 }
