@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { PDFUpload } from "@/components/pdf-upload";
+import { PDF_UPLOADS_ENABLED } from "@/lib/features";
 
 function SearchPageContent() {
   const router = useRouter();
@@ -111,20 +112,25 @@ function SearchPageContent() {
           </form>
         </div>
 
-        {/* Upload Section */}
-        <div className="space-y-4 pt-4 border-t">
-          <div className="flex items-center gap-3">
-            <Upload className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">
-              Upload Your Own PDF
-            </h2>
+        {PDF_UPLOADS_ENABLED ? (
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center gap-3">
+              <Upload className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">
+                Upload Your Own PDF
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Upload a research paper PDF to analyze it with AI.
+            </p>
+            <PDFUpload onPaperAdd={handlePaperUpload} currentPaperCount={0} />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Upload a research paper PDF (max 15MB) to analyze it with AI. We
-            check for malicious content to ensure your safety.
-          </p>
-          <PDFUpload onPaperAdd={handlePaperUpload} currentPaperCount={0} />
-        </div>
+        ) : (
+          <div className="pt-4 border-t text-sm text-muted-foreground">
+            PDF uploads are temporarily disabled. Search arXiv papers to analyze
+            them with AI.
+          </div>
+        )}
 
         {query && (
           <motion.h1
@@ -159,8 +165,7 @@ function SearchPageContent() {
           allPapers.length > 0 && (
             <PaperGrid
               papers={allPapers}
-              onPaperSelect={(paperId, selected) => {
-              }}
+              onPaperSelect={() => {}}
             />
           )
         )}
@@ -168,7 +173,7 @@ function SearchPageContent() {
         {!isLoading && !query && uploadedPapers.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              Search for papers on arXiv or upload your own PDF to get started
+              Search for papers on arXiv to get started
             </p>
           </div>
         )}

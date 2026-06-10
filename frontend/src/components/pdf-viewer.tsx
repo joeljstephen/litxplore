@@ -19,8 +19,7 @@ export function PDFViewer({ url }: PDFViewerProps) {
   
   if (url.startsWith("/uploads/")) {
     // Uploaded PDF - construct full backend URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    pdfUrl = `${apiUrl}${url}`;
+    pdfUrl = url;
   } else if (url.startsWith("http://") || url.startsWith("https://")) {
     // External URL (arXiv) - use as is
     pdfUrl = url;

@@ -297,7 +297,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto relative">
             {[
-              { step: "1", title: "Search Papers", description: "Search arXiv for papers on your research topic or upload your own PDF", icon: Search },
+              { step: "1", title: "Search Papers", description: "Search arXiv for papers on your research topic", icon: Search },
               { step: "2", title: "Analyze or Review", description: "Get deep insights from individual papers or generate a comprehensive literature review", icon: Sparkles },
               { step: "3", title: "Explore & Export", description: "Chat with papers, explore findings, and export your reviews for your research", icon: BookOpen },
             ].map((item, index) => (

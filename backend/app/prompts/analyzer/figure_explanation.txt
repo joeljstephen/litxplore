@@ -1,6 +1,0 @@
-Explain what this figure/table shows in 2-3 sentences:
-
-Label: {label}
-Caption: {caption}
-
-Provide a clear, concise explanation.

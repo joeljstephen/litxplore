@@ -18,6 +18,7 @@ import { BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MAX_PAPERS_FOR_REVIEW } from "@/lib/constants";
+import { PDF_UPLOADS_ENABLED } from "@/lib/features";
 
 function ReviewPageContent() {
   const searchParams = useSearchParams();
@@ -178,14 +179,20 @@ function ReviewPageContent() {
                 currentPaperCount={selectedPapers.size}
               />
 
-              {/* Add PDF Upload */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Upload PDF</h3>
-                <PDFUpload
-                  onPaperAdd={handleAddPaper}
-                  currentPaperCount={selectedPapers.size}
-                />
-              </div>
+              {PDF_UPLOADS_ENABLED ? (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">Upload PDF</h3>
+                  <PDFUpload
+                    onPaperAdd={handleAddPaper}
+                    currentPaperCount={selectedPapers.size}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  PDF uploads are temporarily disabled. Select papers from arXiv
+                  to generate a review.
+                </p>
+              )}
             </div>
 
             {/* Selected Papers Count */}

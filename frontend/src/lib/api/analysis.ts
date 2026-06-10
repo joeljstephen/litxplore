@@ -1,6 +1,6 @@
 import { PaperAnalysis } from "@/lib/types/analysis";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = "";
 
 function getAuthHeaders(token?: string | null): HeadersInit {
   return {

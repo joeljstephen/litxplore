@@ -44,8 +44,7 @@ frontend/coverage
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
 
-# Auto-generated API client (regenerate with npm run generate:api)
-frontend/src/lib/api/generated/
+# The generated API client is committed because FastAPI/OpenAPI generation is gone.
 frontend/openapi.json
 
 # Debug logs
@@ -70,3 +69,4 @@ yarn-error.log*
 
 # windsurf rules
 .windsurfrules
+.vercel

@@ -1,9 +1,6 @@
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-// Type to handle both RequestInit and AxiosRequestConfig
-type RequestOptions = AxiosRequestConfig | RequestInit;
+const API_BASE_URL = "";
 
 // Create the base Axios instance
 export const axiosInstance = Axios.create({

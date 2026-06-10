@@ -9,7 +9,7 @@ interface PDFUploadProps {
   currentPaperCount: number;
 }
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // Vercel Functions request body limit
 
 export function PDFUpload({ onPaperAdd, currentPaperCount }: PDFUploadProps) {
   // Orval v8 wraps in { data, status }
@@ -47,7 +47,7 @@ export function PDFUpload({ onPaperAdd, currentPaperCount }: PDFUploadProps) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size exceeds the limit of 15MB");
+      toast.error("File size exceeds Vercel's 4MB upload limit");
       return;
     }
 

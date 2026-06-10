@@ -3,9 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Send, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -49,9 +47,8 @@ export function ChatPanel({ paperId }: ChatPanelProps) {
         throw new Error("Not authenticated");
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
-        `${backendUrl}/api/v1/papers/${paperId}/chat?message=${encodeURIComponent(question)}`,
+        `/api/v1/papers/${paperId}/chat?message=${encodeURIComponent(question)}`,
         {
           method: "POST",
           headers: {
