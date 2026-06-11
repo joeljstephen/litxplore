@@ -214,7 +214,7 @@ export default function PaperAnalyzerPage() {
           value="at-a-glance"
           className="flex-1 overflow-hidden mt-0"
         >
-          <div className="h-full overflow-y-auto p-4">
+          <div className="@container h-full overflow-y-auto bg-muted/10 px-4 py-5 sm:px-6 sm:py-6">
             {isLoading ? (
               <AtAGlanceSkeleton />
             ) : (
