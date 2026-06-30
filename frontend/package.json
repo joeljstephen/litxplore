@@ -106,6 +106,7 @@
   },
   "overrides": {
     "form-data": "^4.0.6",
+    "js-yaml": "^4.2.0",
     "@scalar/openapi-parser": {
       "ajv": "^8.18.0",
       "yaml": "^2.8.3"
