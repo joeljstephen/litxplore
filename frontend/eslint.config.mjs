@@ -1,25 +1,17 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { FlatCompat } from "@eslint/eslintrc";
-import js from "@eslint/js";
+import nextVitals from "eslint-config-next/core-web-vitals";
 import { defineConfig, globalIgnores } from "eslint/config";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  ...compat.extends("next/core-web-vitals", "plugin:@typescript-eslint/recommended"),
+  ...nextVitals,
+  ...tseslint.configs.recommended,
   globalIgnores([
     ".next/**",
     "next-env.d.ts",
     "src/lib/api/generated/**",
   ]),
   {
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.json",
@@ -37,6 +29,7 @@ export default defineConfig([
       ],
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "react/no-unescaped-entities": "off",
+      "react-hooks/set-state-in-effect": "off",
       "@next/next/no-img-element": "off",
     },
   },
