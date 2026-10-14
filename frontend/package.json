@@ -136,6 +136,7 @@
     "postcss-load-config": {
       "yaml": "^2.8.3"
     },
+    "postcss-selector-parser": "^7.1.6",
     "js-cookie": "^3.0.7",
     "postcss": "^8.5.23",
     "sharp": "^0.35.5",
