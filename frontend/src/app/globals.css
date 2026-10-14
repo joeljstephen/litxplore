@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+@import "tw-animate-css";
 
 :root {
   --foreground-rgb: 255, 255, 255;
@@ -276,4 +276,29 @@
 
 .cl-userButtonAvatarBox {
   background: transparent !important;
+}
+
+/* Tailwind v4 only generates variants such as `dark:` for classes declared with
+   `@utility`; in v3 the `.prose.prose-invert` rules in the components layer were
+   also emitted as `.dark .dark\:prose-invert`, which is what the markup's
+   `prose dark:prose-invert` combination relied on. Both forms are kept so the
+   dark-mode typography behaviour matches v3 exactly. */
+@utility prose-invert {
+  @apply text-foreground;
+
+  a {
+    @apply text-primary hover:text-primary/80;
+  }
+
+  blockquote {
+    @apply border-primary text-muted-foreground;
+  }
+
+  code {
+    @apply bg-muted text-foreground;
+  }
+
+  pre {
+    @apply bg-muted border border-border;
+  }
 }
